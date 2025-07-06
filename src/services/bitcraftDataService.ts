@@ -1,6 +1,5 @@
 // Service to fetch Bitcraft item, recipe, and resource data from GitHub
 import type {
-  BitcraftGameData,
   ItemDesc,
   ItemConversionRecipe,
   ItemListDesc,

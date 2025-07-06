@@ -199,11 +199,11 @@ function App() {
               onAddToPlanner={(itemId: number, qty = 1) =>
                 setPlan((prev) => {
                   const exists = prev.find(
-                    (p: PlanItem) => String(p.itemId) === itemId
+                    (p: PlanItem) => p.itemId === itemId
                   );
                   if (exists) {
                     return prev.map((p: PlanItem) =>
-                      String(p.itemId) === itemId
+                      p.itemId === itemId
                         ? { ...p, quantity: p.quantity + (qty || 1) }
                         : p
                     );

@@ -161,7 +161,6 @@ export default function CraftingPlanner({
   recipes,
   plan,
   setPlan,
-  itemListDesc,
   recipeMap,
   fallbackRecipeSearch,
   inventory = [],
@@ -207,12 +206,6 @@ export default function CraftingPlanner({
   const getHaveFromInventory = (itemId: number) => {
     const found = inventory.find((r) => r.itemId === itemId);
     return found ? found.have : 0;
-  };
-
-  const updateHave = (itemId: number, have: number) => {
-    setPlan((prev) =>
-      prev.map((p) => (p.itemId === itemId ? { ...p, have } : p))
-    );
   };
 
   return (
