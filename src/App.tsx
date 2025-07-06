@@ -5,8 +5,16 @@ import ItemList from './components/ItemList';
 import CraftingPlanner from './components/CraftingPlanner';
 import ResourceTracker from './components/ResourceTracker';
 import { fetchAllBitcraftData } from './services/bitcraftDataService';
+import type {
+  BitcraftGameData,
+  CraftingRecipe,
+  ItemConversionRecipe,
+  ItemDesc,
+  ItemListDesc
+} from './types/bitcraft';
+import type { PlanItem, InventoryItem } from './types/app';
 
-function buildRecipeMap(recipes, itemListDesc) {
+function buildRecipeMap(recipes: (CraftingRecipe | ItemConversionRecipe)[], itemListDesc?: ItemListDesc[]): Map<string, CraftingRecipe | ItemConversionRecipe> {
   const map = new Map();
   for (const r of recipes) {
     if (r.output_item_id) map.set(r.output_item_id, r);
@@ -29,31 +37,36 @@ function buildRecipeMap(recipes, itemListDesc) {
   return map;
 }
 
-function findRecipeFallback(recipes, itemId) {
+function findRecipeFallback(recipes: (CraftingRecipe | ItemConversionRecipe)[], itemId: string): CraftingRecipe | ItemConversionRecipe | undefined {
   return recipes.find(r => {
-    if (r.output_item_id === itemId) return true;
-    if (Array.isArray(r.output_items) && r.output_items.some(o => o.id === itemId)) return true;
-    if (r.output && r.output.id === itemId) return true;
+    if ((r as ItemConversionRecipe).output_item_id === itemId) return true;
+    if (Array.isArray((r as ItemConversionRecipe).output_items) && (r as ItemConversionRecipe).output_items!.some(o => o.id === itemId)) return true;
+    if ((r as ItemConversionRecipe).output && (r as ItemConversionRecipe).output!.id === itemId) return true;
     // NEW: Support crafted_item_stacks
-    if (Array.isArray(r.crafted_item_stacks) && r.crafted_item_stacks.some(stack => String(stack[0]) === String(itemId))) return true;
+    if (Array.isArray((r as CraftingRecipe).crafted_item_stacks) && (r as CraftingRecipe).crafted_item_stacks.some(stack => String(stack[0]) === String(itemId))) return true;
     return Object.values(r).some(val => {
       if (typeof val === 'string') return val === itemId;
-      if (Array.isArray(val)) return val.some(v => v && v.id === itemId);
-      if (val && typeof val === 'object') return val.id === itemId;
+      if (Array.isArray(val)) return val.some((v: any) => v && v.id === itemId);
+      if (val && typeof val === 'object') return (val as any).id === itemId;
       return false;
     });
   });
 }
 
 function App() {
-  const [data, setData] = useState({ item_desc: [], item_conversion_recipe_desc: [], item_list_desc: [] });
+  const [data, setData] = useState<BitcraftGameData>({
+    item_desc: [],
+    item_conversion_recipe_desc: [],
+    item_list_desc: [],
+    crafting_recipe_desc: []
+  });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [recipeMap, setRecipeMap] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [recipeMap, setRecipeMap] = useState<Map<string, CraftingRecipe | ItemConversionRecipe> | null>(null);
   const [firstRenderDone, setFirstRenderDone] = useState(false);
 
   // State for crafting planner and inventory
-  const [plan, setPlan] = useState(() => {
+  const [plan, setPlan] = useState<PlanItem[]>(() => {
     try {
       const saved = localStorage.getItem('bitcraft-plan');
       return saved ? JSON.parse(saved) : [];
@@ -61,7 +74,7 @@ function App() {
       return [];
     }
   });
-  const [inventory, setInventory] = useState(() => {
+  const [inventory, setInventory] = useState<InventoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('bitcraft-inventory');
       return saved ? JSON.parse(saved) : [];
@@ -79,7 +92,7 @@ function App() {
   }, [inventory]);
 
   // Download/upload refs
-  const fileInputRef = useRef();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Download JSON
   const handleDownload = () => {
@@ -98,15 +111,18 @@ function App() {
   };
 
   // Upload JSON
-  const handleUpload = (e) => {
-    const file = e.target.files[0];
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
-        const data = JSON.parse(evt.target.result);
-        if (Array.isArray(data.plan)) setPlan(data.plan);
-        if (Array.isArray(data.inventory)) setInventory(data.inventory);
+        const result = evt.target?.result;
+        if (typeof result === 'string') {
+          const data = JSON.parse(result);
+          if (Array.isArray(data.plan)) setPlan(data.plan);
+          if (Array.isArray(data.inventory)) setInventory(data.inventory);
+        }
       } catch (err) {
         alert('Invalid JSON file.');
       }
@@ -119,10 +135,13 @@ function App() {
     fetchAllBitcraftData()
       .then((loadedData) => {
         setData(loadedData);
-        const items = Array.isArray(loadedData.item_desc) ? loadedData.item_desc : Object.values(loadedData.item_desc);
         // Merge both recipe sources
-        const recipes1 = Array.isArray(loadedData.item_conversion_recipe_desc) ? loadedData.item_conversion_recipe_desc : Object.values(loadedData.item_conversion_recipe_desc);
-        const recipes2 = Array.isArray(loadedData.crafting_recipe_desc) ? loadedData.crafting_recipe_desc : Object.values(loadedData.crafting_recipe_desc);
+        const recipes1 = Array.isArray(loadedData.item_conversion_recipe_desc)
+          ? loadedData.item_conversion_recipe_desc
+          : Object.values(loadedData.item_conversion_recipe_desc) as ItemConversionRecipe[];
+        const recipes2 = Array.isArray(loadedData.crafting_recipe_desc)
+          ? loadedData.crafting_recipe_desc
+          : Object.values(loadedData.crafting_recipe_desc) as CraftingRecipe[];
         const recipes = [...recipes1, ...recipes2];
         const itemListDesc = loadedData.item_list_desc;
         const map = buildRecipeMap(recipes, itemListDesc);
@@ -158,8 +177,8 @@ function App() {
   }, []);
 
   // Convert item_desc to array if it's an object
-  const items = Array.isArray(data.item_desc) ? data.item_desc : Object.values(data.item_desc);
-  const recipes = Array.isArray(data.item_conversion_recipe_desc) ? data.item_conversion_recipe_desc : Object.values(data.item_conversion_recipe_desc);
+  const items = Array.isArray(data.item_desc) ? data.item_desc : Object.values(data.item_desc) as ItemDesc[];
+  const recipes = Array.isArray(data.item_conversion_recipe_desc) ? data.item_conversion_recipe_desc : Object.values(data.item_conversion_recipe_desc) as ItemConversionRecipe[];
   const itemListDesc = data.item_list_desc;
 
   // Show spinner overlay until first render is complete
@@ -199,25 +218,22 @@ function App() {
             Plan your crafting, track your resources, and manage your inventory
           </p>
         </div>
-        
+
         <Tabs defaultValue="items" className="w-full">
           <div className="tabs flex justify-center mb-6">
-            <TabsList className="inline-flex bg-bitcraft-bg-tabs rounded-lg p-2 md:p-3">
-              <TabsTrigger 
-                value="items" 
-                className="data-[state=active]:bg-bitcraft-bg-card data-[state=active]:text-bitcraft-primary px-4 md:px-6 py-2 rounded-md transition-colors text-sm md:text-base font-medium"
+            <TabsList className="inline-flex bg-bitcraft-bg-tabs rounded-lg p-2 md:p-3 h-16">
+              <TabsTrigger
+                value="items"
               >
                 📦 Items
               </TabsTrigger>
-              <TabsTrigger 
-                value="planner" 
-                className="data-[state=active]:bg-bitcraft-bg-card data-[state=active]:text-bitcraft-primary px-4 md:px-6 py-2 rounded-md transition-colors text-sm md:text-base font-medium"
+              <TabsTrigger
+                value="planner"
               >
                 🔨 Crafting Planner
               </TabsTrigger>
-              <TabsTrigger 
-                value="inventory" 
-                className="data-[state=active]:bg-bitcraft-bg-card data-[state=active]:text-bitcraft-primary px-4 md:px-6 py-2 rounded-md transition-colors text-sm md:text-base font-medium"
+              <TabsTrigger
+                value="inventory"
               >
                 🎒 Inventory
               </TabsTrigger>
@@ -228,21 +244,21 @@ function App() {
             <ItemList
               items={items}
               itemListDesc={itemListDesc}
-              onAddToPlanner={(itemId, qty = 1) => setPlan((prev) => {
+              onAddToPlanner={(itemId: string, qty = 1) => setPlan((prev: PlanItem[]) => {
                 const idStr = String(itemId);
-                const exists = prev.find((p) => String(p.itemId) === idStr);
+                const exists = prev.find((p: PlanItem) => String(p.itemId) === idStr);
                 if (exists) {
-                  return prev.map((p) =>
+                  return prev.map((p: PlanItem) =>
                     String(p.itemId) === idStr ? { ...p, quantity: p.quantity + (qty || 1) } : p
                   );
                 }
-                return [...prev, { itemId: idStr, quantity: qty || 1, have: 0 }];
+                return [...prev, { itemId: idStr, quantity: qty || 1 }];
               })}
-              onAddToInventory={(itemId, qty = 1) => setInventory((prev) => {
+              onAddToInventory={(itemId: string, qty = 1) => setInventory((prev: InventoryItem[]) => {
                 const idStr = String(itemId);
-                const exists = prev.find((r) => String(r.itemId) === idStr);
+                const exists = prev.find((r: InventoryItem) => String(r.itemId) === idStr);
                 if (exists) {
-                  return prev.map((r) =>
+                  return prev.map((r: InventoryItem) =>
                     String(r.itemId) === idStr ? { ...r, have: r.have + (qty || 1) } : r
                   );
                 }

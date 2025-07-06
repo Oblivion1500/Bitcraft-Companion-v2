@@ -1,19 +1,23 @@
-// src/components/ItemList.jsx
-import React, { useState } from 'react';
+// src/components/ItemList.tsx
+import { useState } from 'react';
+import type { ItemDesc, ItemListDesc } from '@/types/bitcraft';
+
+interface ItemListProps {
+  items: ItemDesc[];
+  itemListDesc: ItemListDesc[];
+  onAddToPlanner: (itemId: string, qty?: number) => void;
+  onAddToInventory: (itemId: string, qty?: number) => void;
+}
 
 /**
  * ItemList component displays a list of items filtered by tier (1-10) and excludes developer tool items.
- * @param {Object[]} items - Array of item objects from item_desc.json
- * @param {Object} itemListDesc - item_list_desc.json for extra info (optional)
- * @param {function} onAddToPlanner - callback to add item to crafting planner
- * @param {function} onAddToInventory - callback to add item to inventory/resource tracker
  */
-export default function ItemList({ items, itemListDesc, onAddToPlanner, onAddToInventory }) {
+export default function ItemList({ items, itemListDesc, onAddToPlanner, onAddToInventory }: ItemListProps) {
   const [search, setSearch] = useState('');
   const [tier, setTier] = useState('');
 
   // Per-item quantity state
-  const [quantities, setQuantities] = useState({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
 
   // Only show items with tier 1-10 and not dev tools
   const filtered = items.filter(
@@ -34,7 +38,7 @@ export default function ItemList({ items, itemListDesc, onAddToPlanner, onAddToI
         <h2 className="text-2xl md:text-3xl font-bold mb-2 text-bitcraft-primary">Items Database</h2>
         <p className="text-bitcraft-text-muted">Browse and add items to your crafting plan (Tiers 1-10)</p>
       </div>
-      
+
       <div className="form-section">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col space-y-2">
@@ -58,7 +62,7 @@ export default function ItemList({ items, itemListDesc, onAddToPlanner, onAddToI
             <select id="item-tier-select" name="item-tier" value={tier} onChange={e => setTier(e.target.value)} className="input-field">
               <option value="">All Tiers</option>
               {[...Array(10)].map((_, i) => (
-                <option key={i+1} value={i+1}>Tier {i+1}</option>
+                <option key={i + 1} value={i + 1}>Tier {i + 1}</option>
               ))}
             </select>
           </div>
@@ -93,7 +97,7 @@ export default function ItemList({ items, itemListDesc, onAddToPlanner, onAddToI
                       </span>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-2">
                       <label htmlFor={`itemlist-qty-${item.id}`} className="text-bitcraft-text text-sm font-medium">
@@ -112,17 +116,17 @@ export default function ItemList({ items, itemListDesc, onAddToPlanner, onAddToI
                         className="input-field w-16 text-center"
                       />
                     </div>
-                    
+
                     <div className="flex gap-2">
-                      <button 
-                        onClick={() => onAddToPlanner?.(item.id, qty)}
+                      <button
+                        onClick={() => onAddToPlanner?.(String(item.id), qty)}
                         className="btn-primary text-sm"
                         title="Add to Crafting Planner"
                       >
                         🔨 Plan
                       </button>
-                      <button 
-                        onClick={() => onAddToInventory?.(item.id, qty)}
+                      <button
+                        onClick={() => onAddToInventory?.(String(item.id), qty)}
                         className="btn-primary text-sm"
                         title="Add to Inventory"
                       >
