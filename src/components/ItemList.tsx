@@ -1,6 +1,6 @@
 // src/components/ItemList.tsx
-import React, { useState } from 'react';
-import type { ItemDesc, ItemListDesc } from '../types/bitcraft';
+import { useState } from 'react';
+import type { ItemDesc, ItemListDesc } from '@/types/bitcraft';
 
 interface ItemListProps {
   items: ItemDesc[];
@@ -119,14 +119,14 @@ export default function ItemList({ items, itemListDesc, onAddToPlanner, onAddToI
 
                     <div className="flex gap-2">
                       <button
-                        onClick={() => onAddToPlanner?.(item.id, qty)}
+                        onClick={() => onAddToPlanner?.(String(item.id), qty)}
                         className="btn-primary text-sm"
                         title="Add to Crafting Planner"
                       >
                         🔨 Plan
                       </button>
                       <button
-                        onClick={() => onAddToInventory?.(item.id, qty)}
+                        onClick={() => onAddToInventory?.(String(item.id), qty)}
                         className="btn-primary text-sm"
                         title="Add to Inventory"
                       >

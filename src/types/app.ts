@@ -23,7 +23,7 @@ export interface CraftingPlannerProps {
     fallbackRecipeSearch: (recipes: (CraftingRecipe | ItemConversionRecipe)[], itemId: string) => CraftingRecipe | ItemConversionRecipe | undefined;
     inventory: InventoryItem[];
     setInventory: React.Dispatch<React.SetStateAction<InventoryItem[]>>;
-    fileInputRef: React.RefObject<HTMLInputElement>;
+    fileInputRef: React.RefObject<HTMLInputElement | null>;
     handleDownload: () => void;
     handleUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }

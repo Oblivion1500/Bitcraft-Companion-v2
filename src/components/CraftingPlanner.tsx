@@ -4,9 +4,8 @@ import type {
   ItemDesc,
   CraftingRecipe,
   ItemConversionRecipe,
-  ItemListDesc
-} from '../types/bitcraft';
-import type { PlanItem, InventoryItem, CraftingPlannerProps } from '../types/app';
+} from '@/types/bitcraft';
+import type { CraftingPlannerProps } from '@/types/app';
 
 function getItemName(items: ItemDesc[], id: string | number): string {
   const idStr = String(id);
@@ -14,17 +13,16 @@ function getItemName(items: ItemDesc[], id: string | number): string {
   return item ? item.name || item.displayName || idStr : idStr;
 }
 
-function getRecipeInputs(recipe: CraftingRecipe | ItemConversionRecipe): Array<{ id: string; count: number }> {
+function getRecipeInputs(recipe: CraftingRecipe | ItemConversionRecipe) {
   const conversionRecipe = recipe as ItemConversionRecipe;
-  const craftingRecipe = recipe as CraftingRecipe;
 
   if (Array.isArray(conversionRecipe.input_items)) return conversionRecipe.input_items;
-  if (Array.isArray((recipe as any).inputs)) return (recipe as any).inputs;
-  if (Array.isArray((recipe as any).input)) return (recipe as any).input;
+  if (Array.isArray(recipe.inputs)) return recipe.inputs;
+  if (Array.isArray(recipe.input)) return recipe.input;
   // NEW: Support Bitcraft's consumed_item_stacks
-  if (Array.isArray((recipe as any).consumed_item_stacks)) {
+  if (Array.isArray((recipe).consumed_item_stacks)) {
     // Map Bitcraft's [itemId, quantity, ...] to {id, count}
-    return (recipe as any).consumed_item_stacks.map((stack: [string, number]) => ({
+    return (recipe).consumed_item_stacks.map((stack: [string, number]) => ({
       id: stack[0],
       count: stack[1] || 1
     }));
@@ -33,7 +31,7 @@ function getRecipeInputs(recipe: CraftingRecipe | ItemConversionRecipe): Array<{
 }
 
 interface CollapsibleProps {
-  label: string;
+  label: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
   depth?: number;

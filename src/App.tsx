@@ -221,22 +221,19 @@ function App() {
 
         <Tabs defaultValue="items" className="w-full">
           <div className="tabs flex justify-center mb-6">
-            <TabsList className="inline-flex bg-bitcraft-bg-tabs rounded-lg p-2 md:p-3">
+            <TabsList className="inline-flex bg-bitcraft-bg-tabs rounded-lg p-2 md:p-3 h-16">
               <TabsTrigger
                 value="items"
-                className="data-[state=active]:bg-bitcraft-bg-card data-[state=active]:text-bitcraft-primary px-4 md:px-6 py-2 rounded-md transition-colors text-sm md:text-base font-medium"
               >
                 📦 Items
               </TabsTrigger>
               <TabsTrigger
                 value="planner"
-                className="data-[state=active]:bg-bitcraft-bg-card data-[state=active]:text-bitcraft-primary px-4 md:px-6 py-2 rounded-md transition-colors text-sm md:text-base font-medium"
               >
                 🔨 Crafting Planner
               </TabsTrigger>
               <TabsTrigger
                 value="inventory"
-                className="data-[state=active]:bg-bitcraft-bg-card data-[state=active]:text-bitcraft-primary px-4 md:px-6 py-2 rounded-md transition-colors text-sm md:text-base font-medium"
               >
                 🎒 Inventory
               </TabsTrigger>

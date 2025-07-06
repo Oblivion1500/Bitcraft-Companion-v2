@@ -1,7 +1,7 @@
 // Type definitions for Bitcraft game data
 
 export interface ItemDesc {
-    id: string;
+    id: number;
     name: string;
     tier?: number;
     description?: string;

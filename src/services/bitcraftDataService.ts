@@ -5,7 +5,7 @@ import type {
   ItemConversionRecipe,
   ItemListDesc,
   CraftingRecipe
-} from '../types/bitcraft';
+} from '@/types/bitcraft';
 
 const BASE_URL = 'https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region';
 
@@ -25,7 +25,7 @@ export async function fetchBitcraftData<T>(type: DataType): Promise<T[]> {
   return response.json();
 }
 
-export async function fetchAllBitcraftData(): Promise<BitcraftGameData> {
+export async function fetchAllBitcraftData() {
   const [item_desc, item_conversion_recipe_desc, item_list_desc, crafting_recipe_desc] = await Promise.all([
     fetchBitcraftData<ItemDesc>('item_desc'),
     fetchBitcraftData<ItemConversionRecipe>('item_conversion_recipe_desc'),
@@ -47,7 +47,7 @@ function getRecipeArray(input: any): CraftingRecipe[] {
 }
 
 // Find all recipes that produce a given itemId (type-safe, robust)
-export function findRecipesThatProduce(itemId: string, craftingRecipes: CraftingRecipe[] | any): CraftingRecipe[] {
+export function findRecipesThatProduce(itemId: string, craftingRecipes: CraftingRecipe[]): CraftingRecipe[] {
   const recipesArr = getRecipeArray(craftingRecipes);
   return recipesArr.filter(recipe =>
     Array.isArray(recipe.crafted_item_stacks) &&
@@ -56,7 +56,7 @@ export function findRecipesThatProduce(itemId: string, craftingRecipes: Crafting
 }
 
 // Find all recipes that consume a given itemId (type-safe, robust)
-export function findRecipesThatConsume(itemId: string, craftingRecipes: CraftingRecipe[] | any): CraftingRecipe[] {
+export function findRecipesThatConsume(itemId: string, craftingRecipes: CraftingRecipe[]): CraftingRecipe[] {
   const recipesArr = getRecipeArray(craftingRecipes);
   return recipesArr.filter(recipe =>
     Array.isArray((recipe as any).consumed_item_stacks) &&
@@ -65,7 +65,7 @@ export function findRecipesThatConsume(itemId: string, craftingRecipes: Crafting
 }
 
 // Debug utility: logs info and finds recipes that produce a given itemId
-export function debugFindRecipesThatProduce(itemId: string, craftingRecipes: CraftingRecipe[] | any): CraftingRecipe[] {
+export function debugFindRecipesThatProduce(itemId: string, craftingRecipes: CraftingRecipe[]): CraftingRecipe[] {
   const recipesArr = getRecipeArray(craftingRecipes);
   console.log('DEBUG: craftingRecipes type:', typeof craftingRecipes, Array.isArray(craftingRecipes));
   console.log('DEBUG: craftingRecipes sample:', recipesArr && recipesArr.length > 0 ? recipesArr[0] : recipesArr);
