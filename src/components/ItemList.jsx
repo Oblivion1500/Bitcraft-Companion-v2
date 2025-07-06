@@ -29,52 +29,113 @@ export default function ItemList({ items, itemListDesc, onAddToPlanner, onAddToI
   );
 
   return (
-    <div className="item-list">
-      <h2>Items (Tiers 1-10)</h2>
-      <div style={{ marginBottom: 12 }}>
-        <label htmlFor="item-search-input" style={{marginRight:4}}>Search:</label>
-        <input
-          id="item-search-input"
-          name="item-search"
-          type="text"
-          placeholder="Search items..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ marginRight: 8 }}
-        />
-        <label htmlFor="item-tier-select" style={{marginRight:4}}>Tier:</label>
-        <select id="item-tier-select" name="item-tier" value={tier} onChange={e => setTier(e.target.value)}>
-          <option value="">All Tiers</option>
-          {[...Array(10)].map((_, i) => (
-            <option key={i+1} value={i+1}>Tier {i+1}</option>
-          ))}
-        </select>
+    <div className="card">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-bitcraft-primary">Items Database</h2>
+        <p className="text-bitcraft-text-muted">Browse and add items to your crafting plan (Tiers 1-10)</p>
       </div>
-      <ul>
-        {filtered.map((item) => {
-          const qty = quantities[item.id] || 1;
-          return (
-            <li key={item.id || item.name}>
-              {item.name || item.displayName || item.id} {item.tier ? `(Tier ${item.tier})` : ''}
-              <label htmlFor={`itemlist-qty-${item.id}`} style={{marginLeft:8,marginRight:4}}>Qty:</label>
-              <input
-                id={`itemlist-qty-${item.id}`}
-                name={`itemlist-qty-${item.id}`}
-                type="number"
-                min="1"
-                value={qty}
-                onChange={e => {
-                  const val = Math.max(1, Number(e.target.value));
-                  setQuantities(q => ({ ...q, [item.id]: val }));
-                }}
-                style={{ width: 60 }}
-              />
-              <button style={{marginLeft: 4}} onClick={() => onAddToPlanner?.(item.id, qty)}>Add to Planner</button>
-              <button style={{marginLeft: 4}} onClick={() => onAddToInventory?.(item.id, qty)}>Add to Inventory</button>
-            </li>
-          );
-        })}
-      </ul>
+      
+      <div className="form-section">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col space-y-2">
+            <label htmlFor="item-search-input" className="text-bitcraft-text font-medium text-sm">
+              🔍 Search Items
+            </label>
+            <input
+              id="item-search-input"
+              name="item-search"
+              type="text"
+              placeholder="Search items by name..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="input-field"
+            />
+          </div>
+          <div className="flex flex-col space-y-2">
+            <label htmlFor="item-tier-select" className="text-bitcraft-text font-medium text-sm">
+              🎯 Filter by Tier
+            </label>
+            <select id="item-tier-select" name="item-tier" value={tier} onChange={e => setTier(e.target.value)} className="input-field">
+              <option value="">All Tiers</option>
+              {[...Array(10)].map((_, i) => (
+                <option key={i+1} value={i+1}>Tier {i+1}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <p className="text-bitcraft-text-muted text-sm">
+          Found {filtered.length} items
+        </p>
+      </div>
+
+      <div className="grid gap-3">
+        {filtered.length === 0 ? (
+          <div className="text-center py-8 text-bitcraft-text-muted">
+            <p className="text-lg">No items found</p>
+            <p className="text-sm">Try adjusting your search or tier filter</p>
+          </div>
+        ) : (
+          filtered.map((item) => {
+            const qty = quantities[item.id] || 1;
+            return (
+              <div key={item.id || item.name} className="item-row">
+                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-bitcraft-text font-medium text-lg">
+                      {item.name || item.displayName || item.id}
+                    </h3>
+                    {item.tier && (
+                      <span className="inline-block px-2 py-1 bg-bitcraft-primary text-bitcraft-text-dark text-xs rounded-full font-medium">
+                        Tier {item.tier}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <label htmlFor={`itemlist-qty-${item.id}`} className="text-bitcraft-text text-sm font-medium">
+                        Qty:
+                      </label>
+                      <input
+                        id={`itemlist-qty-${item.id}`}
+                        name={`itemlist-qty-${item.id}`}
+                        type="number"
+                        min="1"
+                        value={qty}
+                        onChange={e => {
+                          const val = Math.max(1, Number(e.target.value));
+                          setQuantities(q => ({ ...q, [item.id]: val }));
+                        }}
+                        className="input-field w-16 text-center"
+                      />
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => onAddToPlanner?.(item.id, qty)}
+                        className="btn-primary text-sm"
+                        title="Add to Crafting Planner"
+                      >
+                        🔨 Plan
+                      </button>
+                      <button 
+                        onClick={() => onAddToInventory?.(item.id, qty)}
+                        className="btn-primary text-sm"
+                        title="Add to Inventory"
+                      >
+                        🎒 Inventory
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

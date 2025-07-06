@@ -1,126 +1,96 @@
+@import './theme/bitcraftTheme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import './theme/bitcraftTheme.css';
+@layer base {
+  :root {
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color-scheme: dark;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: dark;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  body {
+    @apply bg-bitcraft-bg text-bitcraft-text min-h-screen;
+    margin: 0;
+    min-width: 320px;
+    padding: 1rem;
+  }
 
-a {
-  font-weight: 500;
-  color: #4A90E2 !important;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #ffe08a !important;
-}
+  h1 {
+    @apply text-bitcraft-primary text-4xl md:text-5xl leading-tight font-bold;
+  }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: #232825 !important;
-  color: #f9fafb !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  h2 {
+    @apply text-bitcraft-primary text-2xl md:text-3xl leading-tight font-bold;
+  }
 
-.app-container {
-  background: #2e332f !important;
-  color: #f9fafb !important;
-  border-radius: 18px;
-  box-shadow: 0 4px 32px 0 #000a;
-  padding: 2.5rem 2rem 2rem 2rem;
-  margin: 2rem auto;
-  max-width: 900px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  a {
+    @apply text-bitcraft-secondary hover:text-bitcraft-primary font-medium no-underline transition-colors;
+  }
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  color: #ffe08a !important;
-}
+@layer components {
+  .app-container {
+    @apply bg-bitcraft-bg-container text-bitcraft-text rounded-bitcraft shadow-bitcraft;
+    @apply w-full max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10;
+    @apply flex flex-col items-center;
+  }
 
-button {
-  border-radius: 8px;
-  border: none;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #ffe08a !important;
-  color: #232323 !important;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-button:hover {
-  background: #c9b36a !important;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+  .card {
+    @apply bg-bitcraft-bg-card rounded-card shadow-card p-4 md:p-6 mb-6 text-bitcraft-text w-full;
+  }
 
-input, select, textarea {
-  background: #353a36 !important;
-  color: #f9fafb !important;
-  border: 1px solid #c9a86a !important;
-  border-radius: 6px;
-  padding: 0.5em 1em;
-}
+  .shadcn-card {
+    @apply bg-bitcraft-bg-card rounded-card shadow-card p-4 md:p-6 mb-6 text-bitcraft-text w-full;
+  }
 
-.card, .shadcn-card {
-  background: #404640 !important;
-  border-radius: 14px;
-  box-shadow: 0 1px 8px 0 #0006;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  color: #f9fafb !important;
-}
+  .btn-primary {
+    @apply bg-bitcraft-primary hover:bg-bitcraft-primary-hover text-bitcraft-text-dark;
+    @apply font-medium py-2 px-4 md:px-5 rounded-lg border-none cursor-pointer transition-colors;
+    @apply text-sm md:text-base;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-bitcraft-primary;
+  }
 
-.tabs {
-  background: #353a36 !important;
-  border-radius: 10px;
-  padding: 0.7rem;
-}
+  .input-field {
+    @apply bg-bitcraft-bg-input text-bitcraft-text border border-bitcraft-border rounded-md px-3 py-2;
+    @apply text-sm md:text-base;
+  }
 
-.tabs [role="tab"] {
-  color: #d1d5db !important;
-  background: none;
-  border: none;
-  font-weight: 500;
-  padding: 0.6em 1.4em;
-  border-radius: 8px 8px 0 0;
-  margin-right: 0.7em;
-  cursor: pointer;
-  transition: color 0.2s, background 0.2s;
-}
-.tabs [role="tab"][aria-selected="true"] {
-  color: #ffe08a !important;
-  background: #404640 !important;
-}
+  .tabs {
+    @apply bg-bitcraft-bg-tabs rounded-lg p-2 md:p-3;
+  }
 
-.collapsible {
-  background: #353a36 !important;
-  border-radius: 10px;
-  margin-bottom: 1.2em;
-}
+  .tabs [role="tab"] {
+    @apply text-bitcraft-text-muted bg-transparent border-none font-medium;
+    @apply py-2 px-4 md:px-6 rounded-t-lg mr-2 md:mr-3 cursor-pointer transition-colors;
+    @apply text-sm md:text-base;
+  }
 
-hr {
-  border: 0;
-  border-top: 1px solid #c9a86a !important;
-  margin: 1.5em 0;
+  .tabs [role="tab"][aria-selected="true"] {
+    @apply text-bitcraft-primary bg-bitcraft-bg-card;
+  }
+
+  .collapsible {
+    @apply bg-bitcraft-bg-collapsible rounded-lg mb-5 p-3;
+  }
+
+  .form-section {
+    @apply bg-bitcraft-bg-input rounded-lg p-4 md:p-6 mb-6;
+  }
+
+  .item-row {
+    @apply bg-bitcraft-bg-input p-3 md:p-4 rounded-lg border border-bitcraft-border;
+    @apply hover:border-bitcraft-primary transition-colors;
+  }
+
+  hr {
+    @apply border-0 border-t border-bitcraft-border my-6;
+  }
 }

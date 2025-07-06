@@ -170,10 +170,14 @@ function App() {
   }, [loading, recipeMap, firstRenderDone]);
 
   if (loading || !recipeMap || !firstRenderDone) {
-    return <div className="loading" style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#242424',color:'#fff',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'2em'}}>Loading Bitcraft data and recipes...</div>;
+    return (
+      <div className="fixed inset-0 bg-bitcraft-bg text-bitcraft-text z-50 flex items-center justify-center text-2xl">
+        Loading Bitcraft data and recipes...
+      </div>
+    );
   }
   if (error) return (
-    <div className="error">
+    <div className="bg-red-800 text-white p-6 rounded-lg max-w-4xl mx-auto mt-8">
       <strong>Error:</strong> {error}
       <br />
       <code>item_desc.json URL: https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region/item_desc.json</code>
@@ -185,64 +189,94 @@ function App() {
   );
 
   return (
-    <div className="app-container shadow-lg rounded-xl p-6 max-w-3xl mx-auto mt-8 bg-[var(--bc-bg-alt)] text-[var(--bc-text)]">
-      <h1 className="text-3xl font-bold mb-6 text-[var(--bc-primary)]">Bitcraft Companion</h1>
-      <Tabs defaultValue="items" className="w-full">
-        <TabsList className="flex gap-2 bg-[var(--bc-surface)] rounded-lg p-1 mb-4">
-          <TabsTrigger value="items" className="data-[state=active]:bg-[var(--bc-surface-alt)] data-[state=active]:text-[var(--bc-primary)] px-4 py-2 rounded-md transition-colors">Items</TabsTrigger>
-          <TabsTrigger value="planner" className="data-[state=active]:bg-[var(--bc-surface-alt)] data-[state=active]:text-[var(--bc-primary)] px-4 py-2 rounded-md transition-colors">Crafting Planner</TabsTrigger>
-          <TabsTrigger value="inventory" className="data-[state=active]:bg-[var(--bc-surface-alt)] data-[state=active]:text-[var(--bc-primary)] px-4 py-2 rounded-md transition-colors">Inventory</TabsTrigger>
-        </TabsList>
-        <TabsContent value="items">
-          <ItemList
-            items={items}
-            itemListDesc={itemListDesc}
-            onAddToPlanner={(itemId, qty = 1) => setPlan((prev) => {
-              const idStr = String(itemId);
-              const exists = prev.find((p) => String(p.itemId) === idStr);
-              if (exists) {
-                return prev.map((p) =>
-                  String(p.itemId) === idStr ? { ...p, quantity: p.quantity + (qty || 1) } : p
-                );
-              }
-              return [...prev, { itemId: idStr, quantity: qty || 1, have: 0 }];
-            })}
-            onAddToInventory={(itemId, qty = 1) => setInventory((prev) => {
-              const idStr = String(itemId);
-              const exists = prev.find((r) => String(r.itemId) === idStr);
-              if (exists) {
-                return prev.map((r) =>
-                  String(r.itemId) === idStr ? { ...r, have: r.have + (qty || 1) } : r
-                );
-              }
-              return [...prev, { itemId: idStr, have: qty || 1 }];
-            })}
-          />
-        </TabsContent>
-        <TabsContent value="planner">
-          <CraftingPlanner
-            items={items}
-            recipes={recipes}
-            plan={plan}
-            setPlan={setPlan}
-            itemListDesc={itemListDesc}
-            recipeMap={recipeMap}
-            fallbackRecipeSearch={findRecipeFallback}
-            inventory={inventory}
-            setInventory={setInventory}
-            fileInputRef={fileInputRef}
-            handleDownload={handleDownload}
-            handleUpload={handleUpload}
-          />
-        </TabsContent>
-        <TabsContent value="inventory">
-          <ResourceTracker
-            items={items}
-            inventory={inventory}
-            setInventory={setInventory}
-          />
-        </TabsContent>
-      </Tabs>
+    <div className="min-h-screen bg-bitcraft-bg py-4 md:py-8">
+      <div className="app-container">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold mb-2 text-bitcraft-primary">
+            Bitcraft Companion
+          </h1>
+          <p className="text-bitcraft-text-muted text-lg">
+            Plan your crafting, track your resources, and manage your inventory
+          </p>
+        </div>
+        
+        <Tabs defaultValue="items" className="w-full">
+          <div className="flex justify-center mb-6">
+            <TabsList className="tabs inline-flex">
+              <TabsTrigger 
+                value="items" 
+                className="data-[state=active]:bg-bitcraft-bg-card data-[state=active]:text-bitcraft-primary px-4 md:px-6 py-2 rounded-md transition-colors text-sm md:text-base font-medium"
+              >
+                📦 Items
+              </TabsTrigger>
+              <TabsTrigger 
+                value="planner" 
+                className="data-[state=active]:bg-bitcraft-bg-card data-[state=active]:text-bitcraft-primary px-4 md:px-6 py-2 rounded-md transition-colors text-sm md:text-base font-medium"
+              >
+                🔨 Crafting Planner
+              </TabsTrigger>
+              <TabsTrigger 
+                value="inventory" 
+                className="data-[state=active]:bg-bitcraft-bg-card data-[state=active]:text-bitcraft-primary px-4 md:px-6 py-2 rounded-md transition-colors text-sm md:text-base font-medium"
+              >
+                🎒 Inventory
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="items">
+            <ItemList
+              items={items}
+              itemListDesc={itemListDesc}
+              onAddToPlanner={(itemId, qty = 1) => setPlan((prev) => {
+                const idStr = String(itemId);
+                const exists = prev.find((p) => String(p.itemId) === idStr);
+                if (exists) {
+                  return prev.map((p) =>
+                    String(p.itemId) === idStr ? { ...p, quantity: p.quantity + (qty || 1) } : p
+                  );
+                }
+                return [...prev, { itemId: idStr, quantity: qty || 1, have: 0 }];
+              })}
+              onAddToInventory={(itemId, qty = 1) => setInventory((prev) => {
+                const idStr = String(itemId);
+                const exists = prev.find((r) => String(r.itemId) === idStr);
+                if (exists) {
+                  return prev.map((r) =>
+                    String(r.itemId) === idStr ? { ...r, have: r.have + (qty || 1) } : r
+                  );
+                }
+                return [...prev, { itemId: idStr, have: qty || 1 }];
+              })}
+            />
+          </TabsContent>
+
+          <TabsContent value="planner">
+            <CraftingPlanner
+              items={items}
+              recipes={recipes}
+              plan={plan}
+              setPlan={setPlan}
+              itemListDesc={itemListDesc}
+              recipeMap={recipeMap}
+              fallbackRecipeSearch={findRecipeFallback}
+              inventory={inventory}
+              setInventory={setInventory}
+              fileInputRef={fileInputRef}
+              handleDownload={handleDownload}
+              handleUpload={handleUpload}
+            />
+          </TabsContent>
+
+          <TabsContent value="inventory">
+            <ResourceTracker
+              items={items}
+              inventory={inventory}
+              setInventory={setInventory}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
