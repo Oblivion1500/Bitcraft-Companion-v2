@@ -1,55 +1,34 @@
-import React, { useEffect, useState, useRef } from 'react';
-import './index.css'; // Use Tailwind and theme
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/ui/tabs";
-import ItemList from './components/ItemList';
-import CraftingPlanner from './components/CraftingPlanner';
-import ResourceTracker from './components/ResourceTracker';
-import { fetchAllBitcraftData } from './services/bitcraftDataService';
+import React, { useEffect, useState, useRef } from "react";
+import "./index.css"; // Use Tailwind and theme
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import ItemList from "@/components/ItemList";
+import CraftingPlanner from "@/components/CraftingPlanner";
+import ResourceTracker from "@/components/ResourceTracker";
+import { fetchAllBitcraftData } from "@/services/bitcraftDataService";
 import type {
   BitcraftGameData,
   CraftingRecipe,
   ItemConversionRecipe,
-  ItemDesc,
-  ItemListDesc
-} from './types/bitcraft';
-import type { PlanItem, InventoryItem } from './types/app';
+} from "@/types/bitcraft";
+import type { PlanItem, InventoryItem } from "@/types/app";
 
-function buildRecipeMap(recipes: (CraftingRecipe | ItemConversionRecipe)[], itemListDesc?: ItemListDesc[]): Map<string, CraftingRecipe | ItemConversionRecipe> {
-  const map = new Map();
-  for (const r of recipes) {
-    if (r.output_item_id) map.set(r.output_item_id, r);
-    if (Array.isArray(r.output_items)) {
-      for (const o of r.output_items) {
-        if (o.id) map.set(o.id, r);
-      }
-    }
-    if (r.output && r.output.id) map.set(r.output.id, r);
-    // NEW: Support crafted_item_stacks (Bitcraft crafting_recipe_desc)
+function buildCraftingRecipeMap(craftingRecipes: CraftingRecipe[]) {
+  const map = new Map<string, CraftingRecipe>();
+  // NEW: Support crafted_item_stacks (Bitcraft crafting_recipe_desc)
+  for (const r of craftingRecipes) {
     if (Array.isArray(r.crafted_item_stacks)) {
       for (const stack of r.crafted_item_stacks) {
         if (stack && stack.length > 0) map.set(String(stack[0]), r);
       }
     }
-    if (itemListDesc && r.output_item_id && itemListDesc[r.output_item_id]) {
-      map.set(itemListDesc[r.output_item_id].id, r);
-    }
   }
   return map;
 }
 
-function findRecipeFallback(recipes: (CraftingRecipe | ItemConversionRecipe)[], itemId: string): CraftingRecipe | ItemConversionRecipe | undefined {
-  return recipes.find(r => {
-    if ((r as ItemConversionRecipe).output_item_id === itemId) return true;
-    if (Array.isArray((r as ItemConversionRecipe).output_items) && (r as ItemConversionRecipe).output_items!.some(o => o.id === itemId)) return true;
-    if ((r as ItemConversionRecipe).output && (r as ItemConversionRecipe).output!.id === itemId) return true;
-    // NEW: Support crafted_item_stacks
-    if (Array.isArray((r as CraftingRecipe).crafted_item_stacks) && (r as CraftingRecipe).crafted_item_stacks.some(stack => String(stack[0]) === String(itemId))) return true;
-    return Object.values(r).some(val => {
-      if (typeof val === 'string') return val === itemId;
-      if (Array.isArray(val)) return val.some((v: any) => v && v.id === itemId);
-      if (val && typeof val === 'object') return (val as any).id === itemId;
-      return false;
-    });
+function findRecipeFallback(recipes: ItemConversionRecipe[], itemId: number) {
+  return recipes.find((r) => {
+    const inputIds = r.input_items?.map((tuple) => tuple[0]);
+    return r.id === itemId || inputIds?.includes(itemId);
   });
 }
 
@@ -58,17 +37,20 @@ function App() {
     item_desc: [],
     item_conversion_recipe_desc: [],
     item_list_desc: [],
-    crafting_recipe_desc: []
+    crafting_recipe_desc: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [recipeMap, setRecipeMap] = useState<Map<string, CraftingRecipe | ItemConversionRecipe> | null>(null);
+  const [recipeMap, setRecipeMap] = useState<Map<
+    string,
+    CraftingRecipe
+  > | null>(null);
   const [firstRenderDone, setFirstRenderDone] = useState(false);
 
   // State for crafting planner and inventory
   const [plan, setPlan] = useState<PlanItem[]>(() => {
     try {
-      const saved = localStorage.getItem('bitcraft-plan');
+      const saved = localStorage.getItem("bitcraft-plan");
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -76,7 +58,7 @@ function App() {
   });
   const [inventory, setInventory] = useState<InventoryItem[]>(() => {
     try {
-      const saved = localStorage.getItem('bitcraft-inventory');
+      const saved = localStorage.getItem("bitcraft-inventory");
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -85,10 +67,10 @@ function App() {
 
   // Save to localStorage on change
   useEffect(() => {
-    localStorage.setItem('bitcraft-plan', JSON.stringify(plan));
+    localStorage.setItem("bitcraft-plan", JSON.stringify(plan));
   }, [plan]);
   useEffect(() => {
-    localStorage.setItem('bitcraft-inventory', JSON.stringify(inventory));
+    localStorage.setItem("bitcraft-inventory", JSON.stringify(inventory));
   }, [inventory]);
 
   // Download/upload refs
@@ -97,11 +79,13 @@ function App() {
   // Download JSON
   const handleDownload = () => {
     const data = { plan, inventory };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'bitcraft_save.json';
+    a.download = "bitcraft_save.json";
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
@@ -118,13 +102,13 @@ function App() {
     reader.onload = (evt) => {
       try {
         const result = evt.target?.result;
-        if (typeof result === 'string') {
+        if (typeof result === "string") {
           const data = JSON.parse(result);
           if (Array.isArray(data.plan)) setPlan(data.plan);
           if (Array.isArray(data.inventory)) setInventory(data.inventory);
         }
       } catch (err) {
-        alert('Invalid JSON file.');
+        alert("Invalid JSON file.");
       }
     };
     reader.readAsText(file);
@@ -135,50 +119,20 @@ function App() {
     fetchAllBitcraftData()
       .then((loadedData) => {
         setData(loadedData);
-        // Merge both recipe sources
-        const recipes1 = Array.isArray(loadedData.item_conversion_recipe_desc)
-          ? loadedData.item_conversion_recipe_desc
-          : Object.values(loadedData.item_conversion_recipe_desc) as ItemConversionRecipe[];
-        const recipes2 = Array.isArray(loadedData.crafting_recipe_desc)
-          ? loadedData.crafting_recipe_desc
-          : Object.values(loadedData.crafting_recipe_desc) as CraftingRecipe[];
-        const recipes = [...recipes1, ...recipes2];
-        const itemListDesc = loadedData.item_list_desc;
-        const map = buildRecipeMap(recipes, itemListDesc);
-        setRecipeMap(map);
-        // Debug: dump all recipe outputs for manual search
-        // const allOutputs = [];
-        // for (const r of recipes) {
-        //   if (r.output_item_id) allOutputs.push(r.output_item_id);
-        //   if (Array.isArray(r.output_items)) allOutputs.push(...r.output_items.map(o => o.id));
-        //   if (r.output && r.output.id) allOutputs.push(r.output.id);
-        // }
-        // console.log('All recipe outputs:', allOutputs);
-        // Debug: check for Rough Leather
-        // if (!map.has('1070004')) {
-        //   const fallback = findRecipeFallback(recipes, '1070004');
-        //   if (fallback) {
-        //     console.warn('Fallback recipe found for Rough Leather (ID: 1070004):', fallback);
-        //   } else {
-        //     console.warn('No recipe found for Rough Leather (ID: 1070004) in any field.');
-        //   }
-        // }
-        // Debug: check map keys and crafted_item_stacks for 1070004
-        // const mapKeys = Array.from(map.keys());
-        // console.log('RecipeMap keys (string):', mapKeys);
-        // console.log('Has key "1070004":', map.has('1070004'));
-        // console.log('Has key 1070004:', map.has(1070004));
-        // const recipesWith1070004 = recipes.filter(r => Array.isArray(r.crafted_item_stacks) && r.crafted_item_stacks.some(stack => String(stack[0]) === '1070004'));
-        // console.log('Recipes with crafted_item_stacks containing 1070004:', recipesWith1070004);
-
+        const craftingRecipeMap = buildCraftingRecipeMap(
+          loadedData.crafting_recipe_desc
+        );
+        setRecipeMap(craftingRecipeMap);
         setTimeout(() => setLoading(false), 100);
       })
-      .catch((err) => setError(err.toString() + (err.stack ? `\n${err.stack}` : '')));
+      .catch((err) =>
+        setError(err.toString() + (err.stack ? `\n${err.stack}` : ""))
+      );
   }, []);
 
   // Convert item_desc to array if it's an object
-  const items = Array.isArray(data.item_desc) ? data.item_desc : Object.values(data.item_desc) as ItemDesc[];
-  const recipes = Array.isArray(data.item_conversion_recipe_desc) ? data.item_conversion_recipe_desc : Object.values(data.item_conversion_recipe_desc) as ItemConversionRecipe[];
+  const items = data.item_desc;
+  const recipes = data.item_conversion_recipe_desc;
   const itemListDesc = data.item_list_desc;
 
   // Show spinner overlay until first render is complete
@@ -195,17 +149,27 @@ function App() {
       </div>
     );
   }
-  if (error) return (
-    <div className="bg-red-800 text-white p-6 rounded-lg max-w-4xl mx-auto mt-8">
-      <strong>Error:</strong> {error}
-      <br />
-      <code>item_desc.json URL: https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region/item_desc.json</code>
-      <br />
-      <code>item_conversion_recipe_desc.json URL: https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region/item_conversion_recipe_desc.json</code>
-      <br />
-      <code>item_list_desc.json URL: https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region/item_list_desc.json</code>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="bg-red-800 text-white p-6 rounded-lg max-w-4xl mx-auto mt-8">
+        <strong>Error:</strong> {error}
+        <br />
+        <code>
+          item_desc.json URL:
+          https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region/item_desc.json
+        </code>
+        <br />
+        <code>
+          item_conversion_recipe_desc.json URL:
+          https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region/item_conversion_recipe_desc.json
+        </code>
+        <br />
+        <code>
+          item_list_desc.json URL:
+          https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region/item_list_desc.json
+        </code>
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-bitcraft-bg py-4 md:py-8">
@@ -222,21 +186,9 @@ function App() {
         <Tabs defaultValue="items" className="w-full">
           <div className="tabs flex justify-center mb-6">
             <TabsList className="inline-flex bg-bitcraft-bg-tabs rounded-lg p-2 md:p-3 h-16">
-              <TabsTrigger
-                value="items"
-              >
-                📦 Items
-              </TabsTrigger>
-              <TabsTrigger
-                value="planner"
-              >
-                🔨 Crafting Planner
-              </TabsTrigger>
-              <TabsTrigger
-                value="inventory"
-              >
-                🎒 Inventory
-              </TabsTrigger>
+              <TabsTrigger value="items">📦 Items</TabsTrigger>
+              <TabsTrigger value="planner">🔨 Crafting Planner</TabsTrigger>
+              <TabsTrigger value="inventory">🎒 Inventory</TabsTrigger>
             </TabsList>
           </div>
 
@@ -244,26 +196,36 @@ function App() {
             <ItemList
               items={items}
               itemListDesc={itemListDesc}
-              onAddToPlanner={(itemId: string, qty = 1) => setPlan((prev: PlanItem[]) => {
-                const idStr = String(itemId);
-                const exists = prev.find((p: PlanItem) => String(p.itemId) === idStr);
-                if (exists) {
-                  return prev.map((p: PlanItem) =>
-                    String(p.itemId) === idStr ? { ...p, quantity: p.quantity + (qty || 1) } : p
+              onAddToPlanner={(itemId: number, qty = 1) =>
+                setPlan((prev) => {
+                  const exists = prev.find(
+                    (p: PlanItem) => String(p.itemId) === itemId
                   );
-                }
-                return [...prev, { itemId: idStr, quantity: qty || 1 }];
-              })}
-              onAddToInventory={(itemId: string, qty = 1) => setInventory((prev: InventoryItem[]) => {
-                const idStr = String(itemId);
-                const exists = prev.find((r: InventoryItem) => String(r.itemId) === idStr);
-                if (exists) {
-                  return prev.map((r: InventoryItem) =>
-                    String(r.itemId) === idStr ? { ...r, have: r.have + (qty || 1) } : r
+                  if (exists) {
+                    return prev.map((p: PlanItem) =>
+                      String(p.itemId) === itemId
+                        ? { ...p, quantity: p.quantity + (qty || 1) }
+                        : p
+                    );
+                  }
+                  return [...prev, { itemId: itemId, quantity: qty || 1 }];
+                })
+              }
+              onAddToInventory={(itemId: number, qty = 1) =>
+                setInventory((prev) => {
+                  const exists = prev.find(
+                    (r: InventoryItem) => r.itemId === itemId
                   );
-                }
-                return [...prev, { itemId: idStr, have: qty || 1 }];
-              })}
+                  if (exists) {
+                    return prev.map((r: InventoryItem) =>
+                      r.itemId === itemId
+                        ? { ...r, have: r.have + (qty || 1) }
+                        : r
+                    );
+                  }
+                  return [...prev, { itemId: itemId, have: qty || 1 }];
+                })
+              }
             />
           </TabsContent>
 

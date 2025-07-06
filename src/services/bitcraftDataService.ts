@@ -4,12 +4,17 @@ import type {
   ItemDesc,
   ItemConversionRecipe,
   ItemListDesc,
-  CraftingRecipe
-} from '@/types/bitcraft';
+  CraftingRecipe,
+} from "@/types/bitcraft";
 
-const BASE_URL = 'https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region';
+const BASE_URL =
+  "https://raw.githubusercontent.com/BitCraftToolBox/BitCraft_GameData/refs/heads/main/server/region";
 
-type DataType = 'item_desc' | 'item_conversion_recipe_desc' | 'item_list_desc' | 'crafting_recipe_desc';
+type DataType =
+  | "item_desc"
+  | "item_conversion_recipe_desc"
+  | "item_list_desc"
+  | "crafting_recipe_desc";
 
 const endpoints: Record<DataType, string> = {
   item_desc: `${BASE_URL}/item_desc.json`,
@@ -19,58 +24,96 @@ const endpoints: Record<DataType, string> = {
 };
 
 export async function fetchBitcraftData<T>(type: DataType): Promise<T[]> {
-  if (!endpoints[type]) throw new Error('Invalid data type');
+  if (!endpoints[type]) throw new Error("Invalid data type");
   const response = await fetch(endpoints[type]);
   if (!response.ok) throw new Error(`Failed to fetch ${type}`);
-  return response.json();
+  const res = await response.json();
+  return Array.isArray(res) ? res : (Object.values(res) as T[]);
 }
 
 export async function fetchAllBitcraftData() {
-  const [item_desc, item_conversion_recipe_desc, item_list_desc, crafting_recipe_desc] = await Promise.all([
-    fetchBitcraftData<ItemDesc>('item_desc'),
-    fetchBitcraftData<ItemConversionRecipe>('item_conversion_recipe_desc'),
-    fetchBitcraftData<ItemListDesc>('item_list_desc'),
-    fetchBitcraftData<CraftingRecipe>('crafting_recipe_desc'),
+  const [
+    item_desc,
+    item_conversion_recipe_desc,
+    item_list_desc,
+    crafting_recipe_desc,
+  ] = await Promise.all([
+    fetchBitcraftData<ItemDesc>("item_desc"),
+    fetchBitcraftData<ItemConversionRecipe>("item_conversion_recipe_desc"),
+    fetchBitcraftData<ItemListDesc>("item_list_desc"),
+    fetchBitcraftData<CraftingRecipe>("crafting_recipe_desc"),
   ]);
-  return { item_desc, item_conversion_recipe_desc, item_list_desc, crafting_recipe_desc };
+  return {
+    item_desc,
+    item_conversion_recipe_desc,
+    item_list_desc,
+    crafting_recipe_desc,
+  };
 }
 
 // Helper to ensure we always get the recipe array
 function getRecipeArray(input: any): CraftingRecipe[] {
   if (Array.isArray(input)) return input;
   if (input && Array.isArray(input.crafting_recipe_desc)) {
-    console.warn('WARNING: Passed object instead of array, using .crafting_recipe_desc property.');
+    console.warn(
+      "WARNING: Passed object instead of array, using .crafting_recipe_desc property."
+    );
     return input.crafting_recipe_desc;
   }
-  console.warn('WARNING: craftingRecipes is not an array and has no .crafting_recipe_desc property:', input);
+  console.warn(
+    "WARNING: craftingRecipes is not an array and has no .crafting_recipe_desc property:",
+    input
+  );
   return [];
 }
 
 // Find all recipes that produce a given itemId (type-safe, robust)
-export function findRecipesThatProduce(itemId: string, craftingRecipes: CraftingRecipe[]): CraftingRecipe[] {
+export function findRecipesThatProduce(
+  itemId: string,
+  craftingRecipes: CraftingRecipe[]
+): CraftingRecipe[] {
   const recipesArr = getRecipeArray(craftingRecipes);
-  return recipesArr.filter(recipe =>
-    Array.isArray(recipe.crafted_item_stacks) &&
-    recipe.crafted_item_stacks.some(stack => String(stack[0]) === String(itemId))
+  return recipesArr.filter(
+    (recipe) =>
+      Array.isArray(recipe.crafted_item_stacks) &&
+      recipe.crafted_item_stacks.some(
+        (stack) => String(stack[0]) === String(itemId)
+      )
   );
 }
 
 // Find all recipes that consume a given itemId (type-safe, robust)
-export function findRecipesThatConsume(itemId: string, craftingRecipes: CraftingRecipe[]): CraftingRecipe[] {
+export function findRecipesThatConsume(
+  itemId: string,
+  craftingRecipes: CraftingRecipe[]
+): CraftingRecipe[] {
   const recipesArr = getRecipeArray(craftingRecipes);
-  return recipesArr.filter(recipe =>
-    Array.isArray((recipe as any).consumed_item_stacks) &&
-    (recipe as any).consumed_item_stacks.some((stack: [string, number]) => String(stack[0]) === String(itemId))
+  return recipesArr.filter(
+    (recipe) =>
+      Array.isArray((recipe as any).consumed_item_stacks) &&
+      (recipe as any).consumed_item_stacks.some(
+        (stack: [string, number]) => String(stack[0]) === String(itemId)
+      )
   );
 }
 
 // Debug utility: logs info and finds recipes that produce a given itemId
-export function debugFindRecipesThatProduce(itemId: string, craftingRecipes: CraftingRecipe[]): CraftingRecipe[] {
+export function debugFindRecipesThatProduce(
+  itemId: string,
+  craftingRecipes: CraftingRecipe[]
+): CraftingRecipe[] {
   const recipesArr = getRecipeArray(craftingRecipes);
-  console.log('DEBUG: craftingRecipes type:', typeof craftingRecipes, Array.isArray(craftingRecipes));
-  console.log('DEBUG: craftingRecipes sample:', recipesArr && recipesArr.length > 0 ? recipesArr[0] : recipesArr);
-  console.log('DEBUG: itemId:', itemId, typeof itemId);
+  console.log(
+    "DEBUG: craftingRecipes type:",
+    typeof craftingRecipes,
+    Array.isArray(craftingRecipes)
+  );
+  console.log(
+    "DEBUG: craftingRecipes sample:",
+    recipesArr && recipesArr.length > 0 ? recipesArr[0] : recipesArr
+  );
+  console.log("DEBUG: itemId:", itemId, typeof itemId);
   const recipes = findRecipesThatProduce(itemId, recipesArr);
-  console.log('DEBUG: Recipes found for itemId', itemId, recipes);
+  console.log("DEBUG: Recipes found for itemId", itemId, recipes);
   return recipes;
 }
