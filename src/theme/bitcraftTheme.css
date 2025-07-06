@@ -1,0 +1,108 @@
+:root {
+  --bc-bg: #232825;
+  --bc-bg-alt: #2e332f;
+  --bc-surface: #353a36;
+  --bc-surface-alt: #404640;
+  --bc-primary: #ffe08a;
+  --bc-primary-dark: #c9b36a;
+  --bc-accent: #4a6a5a;
+  --bc-accent-dark: #2b4030;
+  --bc-blue: #4A90E2;
+  --bc-text: #f9fafb;
+  --bc-text-muted: #d1d5db;
+  --bc-border: #4b5563;
+  --bc-danger: #e26a6a;
+  --bc-success: #6ac97a;
+}
+
+body {
+  background: var(--bc-bg);
+  color: var(--bc-text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-container {
+  background: var(--bc-bg-alt);
+  color: var(--bc-text);
+  border-radius: 18px;
+  box-shadow: 0 4px 32px 0 #000a;
+  padding: 2.5rem 2rem 2rem 2rem;
+  margin: 2rem auto;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--bc-primary);
+  text-align: center;
+}
+
+button, .shadcn-btn {
+  background: var(--bc-primary);
+  color: #232323;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6em 1.4em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px 0 #0003;
+}
+button:hover, .shadcn-btn:hover {
+  background: var(--bc-primary-dark);
+}
+
+input, select, textarea {
+  background: var(--bc-surface);
+  color: var(--bc-text);
+  border: 1px solid var(--bc-border);
+  border-radius: 6px;
+  padding: 0.5em 1em;
+}
+
+.card, .shadcn-card {
+  background: var(--bc-surface-alt);
+  border-radius: 14px;
+  box-shadow: 0 1px 8px 0 #0006;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tabs {
+  background: var(--bc-surface);
+  border-radius: 10px;
+  padding: 0.7rem;
+}
+
+.tabs [role="tab"] {
+  color: var(--bc-text-muted);
+  background: none;
+  border: none;
+  font-weight: 500;
+  padding: 0.6em 1.4em;
+  border-radius: 8px 8px 0 0;
+  margin-right: 0.7em;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.tabs [role="tab"][aria-selected="true"] {
+  color: var(--bc-primary);
+  background: var(--bc-surface-alt);
+}
+
+.collapsible {
+  background: var(--bc-surface);
+  border-radius: 10px;
+  margin-bottom: 1.2em;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--bc-border);
+  margin: 1.5em 0;
+}

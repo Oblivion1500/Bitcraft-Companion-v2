@@ -1,0 +1,3 @@
+<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
+
+This project is a Vite + React web app for Bitcraft Online crafting planning. Fetch all item, recipe, and resource data from the BitCraft_GameData GitHub repository (https://github.com/BitCraftToolBox/BitCraft_GameData/tree/main/server) using their raw JSON URLs. Only include tiers 1-10 in the UI. Exclude developer tool tiers. Prioritize modular, maintainable code and a modern, user-friendly interface.

@@ -1,0 +1,80 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2B4C7E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A2E4C;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="hammerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4AF37;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8941F;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pickaxeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B4513;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#654321;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="hexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#357ABD;stop-opacity:0.8" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main background -->
+  <circle cx="100" cy="100" r="95" fill="url(#bgGradient)" stroke="#1A2E4C" stroke-width="2"/>
+  
+  <!-- Hexagonal grid pattern (representing the unique hex-based world) -->
+  <g opacity="0.3">
+    <!-- Large central hexagon -->
+    <polygon points="100,45 125,60 125,85 100,100 75,85 75,60" fill="none" stroke="#4A90E2" stroke-width="2"/>
+    
+    <!-- Surrounding hexagons -->
+    <polygon points="100,15 115,25 115,40 100,50 85,40 85,25" fill="none" stroke="#4A90E2" stroke-width="1.5"/>
+    <polygon points="140,60 155,70 155,85 140,95 125,85 125,70" fill="none" stroke="#4A90E2" stroke-width="1.5"/>
+    <polygon points="60,60 75,70 75,85 60,95 45,85 45,70" fill="none" stroke="#4A90E2" stroke-width="1.5"/>
+    <polygon points="100,130 115,140 115,155 100,165 85,155 85,140" fill="none" stroke="#4A90E2" stroke-width="1.5"/>
+  </g>
+  
+  <!-- Central building blocks (representing construction/building aspect) -->
+  <g>
+    <!-- Building blocks in pixelated style -->
+    <rect x="80" y="80" width="12" height="12" fill="#8B4513" stroke="#654321" stroke-width="1"/>
+    <rect x="92" y="80" width="12" height="12" fill="#A0522D" stroke="#654321" stroke-width="1"/>
+    <rect x="104" y="80" width="12" height="12" fill="#8B4513" stroke="#654321" stroke-width="1"/>
+    
+    <rect x="86" y="92" width="12" height="12" fill="#A0522D" stroke="#654321" stroke-width="1"/>
+    <rect x="98" y="92" width="12" height="12" fill="#8B4513" stroke="#654321" stroke-width="1"/>
+    
+    <rect x="92" y="104" width="12" height="12" fill="#8B4513" stroke="#654321" stroke-width="1"/>
+  </g>
+  
+  <!-- Crossed tools (hammer and pickaxe) -->
+  <g>
+    <!-- Pickaxe handle -->
+    <rect x="65" y="125" width="4" height="30" fill="url(#pickaxeGradient)" transform="rotate(-45 67 140)"/>
+    <!-- Pickaxe head -->
+    <rect x="60" y="120" width="14" height="6" fill="#C0C0C0" stroke="#A0A0A0" stroke-width="1" transform="rotate(-45 67 123)"/>
+    
+    <!-- Hammer handle -->
+    <rect x="131" y="125" width="4" height="30" fill="url(#pickaxeGradient)" transform="rotate(45 133 140)"/>
+    <!-- Hammer head -->
+    <rect x="126" y="120" width="14" height="8" fill="url(#hammerGradient)" stroke="#B8941F" stroke-width="1" transform="rotate(45 133 124)"/>
+  </g>
+  
+  <!-- Pixelated elements around the border -->
+  <g opacity="0.7">
+    <!-- Small pixel squares -->
+    <rect x="40" y="40" width="4" height="4" fill="#4A90E2"/>
+    <rect x="156" y="40" width="4" height="4" fill="#4A90E2"/>
+    <rect x="40" y="156" width="4" height="4" fill="#4A90E2"/>
+    <rect x="156" y="156" width="4" height="4" fill="#4A90E2"/>
+    
+    <!-- Medium pixel squares -->
+    <rect x="30" y="95" width="6" height="6" fill="#357ABD"/>
+    <rect x="164" y="95" width="6" height="6" fill="#357ABD"/>
+    <rect x="95" y="30" width="6" height="6" fill="#357ABD"/>
+    <rect x="95" y="164" width="6" height="6" fill="#357ABD"/>
+  </g>
+  
+  <!-- Subtle inner glow -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="url(#hexGradient)" stroke-width="1" opacity="0.5"/>
+</svg>

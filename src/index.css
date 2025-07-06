@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './theme/bitcraftTheme.css';
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #4A90E2 !important;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #ffe08a !important;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #232825 !important;
+  color: #f9fafb !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-container {
+  background: #2e332f !important;
+  color: #f9fafb !important;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px 0 #000a;
+  padding: 2.5rem 2rem 2rem 2rem;
+  margin: 2rem auto;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  color: #ffe08a !important;
+}
+
+button {
+  border-radius: 8px;
+  border: none;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #ffe08a !important;
+  color: #232323 !important;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #c9b36a !important;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+input, select, textarea {
+  background: #353a36 !important;
+  color: #f9fafb !important;
+  border: 1px solid #c9a86a !important;
+  border-radius: 6px;
+  padding: 0.5em 1em;
+}
+
+.card, .shadcn-card {
+  background: #404640 !important;
+  border-radius: 14px;
+  box-shadow: 0 1px 8px 0 #0006;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #f9fafb !important;
+}
+
+.tabs {
+  background: #353a36 !important;
+  border-radius: 10px;
+  padding: 0.7rem;
+}
+
+.tabs [role="tab"] {
+  color: #d1d5db !important;
+  background: none;
+  border: none;
+  font-weight: 500;
+  padding: 0.6em 1.4em;
+  border-radius: 8px 8px 0 0;
+  margin-right: 0.7em;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.tabs [role="tab"][aria-selected="true"] {
+  color: #ffe08a !important;
+  background: #404640 !important;
+}
+
+.collapsible {
+  background: #353a36 !important;
+  border-radius: 10px;
+  margin-bottom: 1.2em;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #c9a86a !important;
+  margin: 1.5em 0;
+}
