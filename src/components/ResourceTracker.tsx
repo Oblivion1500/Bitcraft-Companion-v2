@@ -1,13 +1,18 @@
-// src/components/ResourceTracker.jsx
+// src/components/ResourceTracker.tsx
 import React, { useState, useMemo } from 'react';
+import type { ItemDesc } from '../types/bitcraft';
+import type { InventoryItem } from '../types/app';
+
+interface ResourceTrackerProps {
+  items: ItemDesc[];
+  inventory: InventoryItem[];
+  setInventory: React.Dispatch<React.SetStateAction<InventoryItem[]>>;
+}
 
 /**
  * ResourceTracker component allows users to track their owned resources.
- * @param {Object[]} items - Array of item objects from item_desc.json
- * @param {Array} inventory - The current inventory [{itemId, have}]
- * @param {function} setInventory - Setter for the inventory
  */
-export default function ResourceTracker({ items, inventory, setInventory }) {
+export default function ResourceTracker({ items, inventory, setInventory }: ResourceTrackerProps) {
   const [selected, setSelected] = useState('');
   const [qty, setQty] = useState(1);
   const [search, setSearch] = useState('');
@@ -26,7 +31,7 @@ export default function ResourceTracker({ items, inventory, setInventory }) {
     });
   }, [items, search, tier]);
 
-  const addResource = (itemId, quantity = 1) => {
+  const addResource = (itemId: string, quantity = 1) => {
     if (!itemId) return;
     setInventory((prev) => {
       const exists = prev.find((r) => r.itemId === itemId);
@@ -39,11 +44,11 @@ export default function ResourceTracker({ items, inventory, setInventory }) {
     });
   };
 
-  const updateHave = (itemId, have) => {
+  const updateHave = (itemId: string, have: number) => {
     setInventory((prev) => prev.map((r) => (r.itemId === itemId ? { ...r, have } : r)));
   };
 
-  const getItemName = (id) => {
+  const getItemName = (id: string | number) => {
     const idStr = String(id);
     const item = items.find((i) => String(i.id) === idStr);
     return item ? item.name || item.displayName || idStr : idStr;
@@ -55,10 +60,10 @@ export default function ResourceTracker({ items, inventory, setInventory }) {
         <h2 className="text-2xl md:text-3xl font-bold mb-2 text-bitcraft-primary">Inventory Tracker</h2>
         <p className="text-bitcraft-text-muted">Track your resources and materials</p>
       </div>
-      
+
       <div className="form-section">
         <h3 className="text-lg font-semibold mb-4 text-bitcraft-primary">➕ Add Resources</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <div className="flex flex-col space-y-2">
             <label htmlFor="inventory-search-input" className="text-bitcraft-text font-medium text-sm">
@@ -74,7 +79,7 @@ export default function ResourceTracker({ items, inventory, setInventory }) {
               className="input-field"
             />
           </div>
-          
+
           <div className="flex flex-col space-y-2">
             <label htmlFor="inventory-tier-select" className="text-bitcraft-text font-medium text-sm">
               🎯 Filter by Tier
@@ -92,16 +97,16 @@ export default function ResourceTracker({ items, inventory, setInventory }) {
               ))}
             </select>
           </div>
-          
+
           <div className="flex flex-col space-y-2">
             <label htmlFor="resource-select" className="text-bitcraft-text font-medium text-sm">
               📦 Select Resource
             </label>
-            <select 
-              id="resource-select" 
-              name="resource-select" 
-              value={selected} 
-              onChange={e => setSelected(e.target.value)} 
+            <select
+              id="resource-select"
+              name="resource-select"
+              value={selected}
+              onChange={e => setSelected(e.target.value)}
               className="input-field"
             >
               <option value="">Choose a resource...</option>
@@ -113,24 +118,24 @@ export default function ResourceTracker({ items, inventory, setInventory }) {
             </select>
           </div>
         </div>
-        
+
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex flex-col space-y-2">
             <label htmlFor="resource-qty-input" className="text-bitcraft-text font-medium text-sm">
               📊 Quantity
             </label>
-            <input 
-              id="resource-qty-input" 
-              name="resource-qty" 
-              type="number" 
-              min="1" 
-              value={qty} 
-              onChange={e => setQty(Number(e.target.value))} 
+            <input
+              id="resource-qty-input"
+              name="resource-qty"
+              type="number"
+              min="1"
+              value={qty}
+              onChange={e => setQty(Number(e.target.value))}
               className="input-field w-24"
             />
           </div>
-          <button 
-            onClick={() => addResource(selected, qty)} 
+          <button
+            onClick={() => addResource(selected, qty)}
             className="btn-primary"
             disabled={!selected}
           >
@@ -143,7 +148,7 @@ export default function ResourceTracker({ items, inventory, setInventory }) {
         <h3 className="text-lg font-semibold mb-4 text-bitcraft-primary">
           🎒 Current Inventory ({inventory.length} items)
         </h3>
-        
+
         {inventory.length === 0 ? (
           <div className="text-center py-8 text-bitcraft-text-muted">
             <p className="text-lg">No resources tracked yet</p>
@@ -159,7 +164,7 @@ export default function ResourceTracker({ items, inventory, setInventory }) {
                       {getItemName(entry.itemId)}
                     </h4>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                       <label htmlFor={`resource-have-input-${entry.itemId}`} className="text-bitcraft-text text-sm font-medium">
@@ -175,7 +180,7 @@ export default function ResourceTracker({ items, inventory, setInventory }) {
                         className="input-field w-20 text-center"
                       />
                     </div>
-                    
+
                     <button
                       onClick={() => setInventory(prev => prev.filter(r => r.itemId !== entry.itemId))}
                       className="text-red-400 hover:text-red-300 transition-colors p-1"
