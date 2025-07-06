@@ -64,7 +64,8 @@
   }
 
   .tabs {
-    @apply bg-bitcraft-bg-tabs rounded-lg p-2 md:p-3;
+    @apply sticky top-4 z-20 bg-bitcraft-bg shadow-lg rounded-lg p-2 md:p-3 mb-6;
+    @apply flex justify-center;
   }
 
   .tabs [role="tab"] {
