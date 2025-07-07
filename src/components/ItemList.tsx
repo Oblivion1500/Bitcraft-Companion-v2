@@ -1,10 +1,9 @@
 // src/components/ItemList.tsx
 import { useState } from "react";
-import type { ItemDesc, ItemListDesc } from "@/types/bitcraft";
+import type { ItemDesc } from "@/types/bitcraft";
 
 interface ItemListProps {
   items: ItemDesc[];
-  itemListDesc: ItemListDesc[];
   onAddToPlanner: (itemId: number, qty?: number) => void;
   onAddToInventory: (itemId: number, qty?: number) => void;
 }
@@ -14,7 +13,6 @@ interface ItemListProps {
  */
 export default function ItemList({
   items,
-  itemListDesc,
   onAddToPlanner,
   onAddToInventory,
 }: ItemListProps) {
@@ -27,12 +25,11 @@ export default function ItemList({
   // Only show items with tier 1-10 and not dev tools
   const filtered = items.filter((item) => {
     // Some items may not have a tier, so check safely
-    const itemTier =
-      item.tier ?? item.Tier ?? itemListDesc?.[item.id]?.tier ?? null;
+    const itemTier = item.tier ?? null;
     const matchesTier = tier
       ? itemTier === Number(tier)
       : itemTier >= 1 && itemTier <= 10;
-    const name = (item.name || item.displayName || item.id || "").toLowerCase();
+    const name = (item.name || String(item.id) || "").toLowerCase();
     const matchesSearch = name.includes(search.toLowerCase());
     return matchesTier && matchesSearch;
   });
@@ -112,7 +109,7 @@ export default function ItemList({
                 <div className="flex flex-col md:flex-row md:items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-bitcraft-text font-medium text-lg">
-                      {item.name || item.displayName || item.id}
+                      {item.name || item.id}
                     </h3>
                     {item.tier && (
                       <span className="inline-block px-2 py-1 bg-bitcraft-primary text-bitcraft-text-dark text-xs rounded-full font-medium">
@@ -145,14 +142,14 @@ export default function ItemList({
 
                     <div className="flex gap-2">
                       <button
-                        onClick={() => onAddToPlanner?.(String(item.id), qty)}
+                        onClick={() => onAddToPlanner(item.id, qty)}
                         className="btn-primary text-sm"
                         title="Add to Crafting Planner"
                       >
                         🔨 Plan
                       </button>
                       <button
-                        onClick={() => onAddToInventory?.(String(item.id), qty)}
+                        onClick={() => onAddToInventory(item.id, qty)}
                         className="btn-primary text-sm"
                         title="Add to Inventory"
                       >

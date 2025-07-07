@@ -13,12 +13,12 @@ import type {
 import type { PlanItem, InventoryItem } from "@/types/app";
 
 function buildCraftingRecipeMap(craftingRecipes: CraftingRecipe[]) {
-  const map = new Map<string, CraftingRecipe>();
+  const map = new Map<number, CraftingRecipe>();
   // NEW: Support crafted_item_stacks (Bitcraft crafting_recipe_desc)
   for (const r of craftingRecipes) {
     if (Array.isArray(r.crafted_item_stacks)) {
       for (const stack of r.crafted_item_stacks) {
-        if (stack && stack.length > 0) map.set(String(stack[0]), r);
+        if (stack && stack.length > 0) map.set(stack[0], r);
       }
     }
   }
@@ -42,7 +42,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recipeMap, setRecipeMap] = useState<Map<
-    string,
+    number,
     CraftingRecipe
   > | null>(null);
   const [firstRenderDone, setFirstRenderDone] = useState(false);
@@ -195,7 +195,6 @@ function App() {
           <TabsContent value="items">
             <ItemList
               items={items}
-              itemListDesc={itemListDesc}
               onAddToPlanner={(itemId: number, qty = 1) =>
                 setPlan((prev) => {
                   const exists = prev.find(

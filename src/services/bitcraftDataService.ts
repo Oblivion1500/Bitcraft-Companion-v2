@@ -68,22 +68,20 @@ function getRecipeArray(input: any): CraftingRecipe[] {
 
 // Find all recipes that produce a given itemId (type-safe, robust)
 export function findRecipesThatProduce(
-  itemId: string,
+  itemId: number,
   craftingRecipes: CraftingRecipe[]
 ): CraftingRecipe[] {
   const recipesArr = getRecipeArray(craftingRecipes);
   return recipesArr.filter(
     (recipe) =>
       Array.isArray(recipe.crafted_item_stacks) &&
-      recipe.crafted_item_stacks.some(
-        (stack) => String(stack[0]) === String(itemId)
-      )
+      recipe.crafted_item_stacks.some((stack) => stack[0] === itemId)
   );
 }
 
 // Find all recipes that consume a given itemId (type-safe, robust)
 export function findRecipesThatConsume(
-  itemId: string,
+  itemId: number,
   craftingRecipes: CraftingRecipe[]
 ): CraftingRecipe[] {
   const recipesArr = getRecipeArray(craftingRecipes);
@@ -91,14 +89,14 @@ export function findRecipesThatConsume(
     (recipe) =>
       Array.isArray((recipe as any).consumed_item_stacks) &&
       (recipe as any).consumed_item_stacks.some(
-        (stack: [string, number]) => String(stack[0]) === String(itemId)
+        (stack: [number, number]) => stack[0] === itemId
       )
   );
 }
 
 // Debug utility: logs info and finds recipes that produce a given itemId
 export function debugFindRecipesThatProduce(
-  itemId: string,
+  itemId: number,
   craftingRecipes: CraftingRecipe[]
 ): CraftingRecipe[] {
   const recipesArr = getRecipeArray(craftingRecipes);

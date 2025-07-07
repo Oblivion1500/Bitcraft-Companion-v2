@@ -7,10 +7,9 @@ import type {
 } from "@/types/bitcraft";
 import type { CraftingPlannerProps, FallbackSearch } from "@/types/app";
 
-function getItemName(items: ItemDesc[], id: string | number): string {
-  const idStr = String(id);
-  const item = items.find((i) => String(i.id) === idStr);
-  return item ? item.name || idStr : idStr;
+function getItemName(items: ItemDesc[], id: number): string {
+  const item = items.find((i) => i.id === id);
+  return item?.name || String(id);
 }
 
 function getRecipeInputs(recipe: CraftingRecipe | ItemConversionRecipe) {
@@ -62,7 +61,7 @@ interface RecipeBreakdownProps {
   itemId: number;
   quantity: number;
   items: ItemDesc[];
-  recipeMap: Map<string, CraftingRecipe> | null;
+  recipeMap: Map<number, CraftingRecipe> | null;
   recipes: ItemConversionRecipe[];
   fallbackRecipeSearch: FallbackSearch;
   depth?: number;
@@ -84,7 +83,7 @@ function RecipeBreakdown({
   const newVisited = new Set(visited);
   newVisited.add(itemId);
 
-  const craftingRecipe = recipeMap?.get(String(itemId));
+  const craftingRecipe = recipeMap?.get(itemId);
   let conversionRecipie: ItemConversionRecipe | undefined;
   // Always use string key
   let usedFallback = false;

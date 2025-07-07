@@ -29,7 +29,7 @@ export interface CraftingPlannerProps {
   plan: PlanItem[];
   setPlan: React.Dispatch<React.SetStateAction<PlanItem[]>>;
   itemListDesc: ItemListDesc[];
-  recipeMap: Map<string, CraftingRecipe> | null;
+  recipeMap: Map<number, CraftingRecipe> | null;
   fallbackRecipeSearch: FallbackSearch;
   inventory: InventoryItem[];
   setInventory: React.Dispatch<React.SetStateAction<InventoryItem[]>>;
