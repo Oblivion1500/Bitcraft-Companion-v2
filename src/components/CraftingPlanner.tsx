@@ -1,30 +1,30 @@
 // src/components/CraftingPlanner.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import type {
   ItemDesc,
   CraftingRecipe,
   ItemConversionRecipe,
-} from '@/types/bitcraft';
-import type { CraftingPlannerProps } from '@/types/app';
+} from "@/types/bitcraft";
+import type { CraftingPlannerProps, FallbackSearch } from "@/types/app";
 
-function getItemName(items: ItemDesc[], id: string | number): string {
-  const idStr = String(id);
-  const item = items.find((i) => String(i.id) === idStr);
-  return item ? item.name || item.displayName || idStr : idStr;
+function getItemName(items: ItemDesc[], id: number): string {
+  const item = items.find((i) => i.id === id);
+  return item?.name || String(id);
 }
 
 function getRecipeInputs(recipe: CraftingRecipe | ItemConversionRecipe) {
   const conversionRecipe = recipe as ItemConversionRecipe;
+  if (Array.isArray(conversionRecipe.input_items)) {
+    return conversionRecipe.input_items;
+  }
 
-  if (Array.isArray(conversionRecipe.input_items)) return conversionRecipe.input_items;
-  if (Array.isArray(recipe.inputs)) return recipe.inputs;
-  if (Array.isArray(recipe.input)) return recipe.input;
+  recipe = recipe as CraftingRecipe;
   // NEW: Support Bitcraft's consumed_item_stacks
-  if (Array.isArray((recipe).consumed_item_stacks)) {
+  if (Array.isArray(recipe.consumed_item_stacks)) {
     // Map Bitcraft's [itemId, quantity, ...] to {id, count}
-    return (recipe).consumed_item_stacks.map((stack: [string, number]) => ({
+    return recipe.consumed_item_stacks.map((stack: [number, number]) => ({
       id: stack[0],
-      count: stack[1] || 1
+      count: stack[1] || 1,
     }));
   }
   return [];
@@ -37,7 +37,12 @@ interface CollapsibleProps {
   depth?: number;
 }
 
-function Collapsible({ label, children, defaultOpen = false, depth = 0 }: CollapsibleProps) {
+function Collapsible({
+  label,
+  children,
+  defaultOpen = false,
+  depth = 0,
+}: CollapsibleProps) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="collapsible" style={{ marginLeft: depth * 16 }}>
@@ -45,7 +50,7 @@ function Collapsible({ label, children, defaultOpen = false, depth = 0 }: Collap
         className="cursor-pointer select-none font-medium text-bitcraft-text hover:text-bitcraft-primary transition-colors"
         onClick={() => setOpen((v) => !v)}
       >
-        {open ? '▼' : '▶'} {label}
+        {open ? "▼" : "▶"} {label}
       </span>
       {open && <div className="mt-2 ml-4">{children}</div>}
     </div>
@@ -53,51 +58,80 @@ function Collapsible({ label, children, defaultOpen = false, depth = 0 }: Collap
 }
 
 interface RecipeBreakdownProps {
-  itemId: string;
+  itemId: number;
   quantity: number;
   items: ItemDesc[];
-  recipeMap: Map<string, CraftingRecipe | ItemConversionRecipe> | null;
-  recipes: (CraftingRecipe | ItemConversionRecipe)[];
-  fallbackRecipeSearch: (recipes: (CraftingRecipe | ItemConversionRecipe)[], itemId: string) => CraftingRecipe | ItemConversionRecipe | undefined;
+  recipeMap: Map<number, CraftingRecipe> | null;
+  recipes: ItemConversionRecipe[];
+  fallbackRecipeSearch: FallbackSearch;
   depth?: number;
-  visited?: Set<string>;
+  visited?: Set<number>;
 }
 
-function RecipeBreakdown({ itemId, quantity, items, recipeMap, recipes, fallbackRecipeSearch, depth = 0, visited = new Set() }: RecipeBreakdownProps) {
+function RecipeBreakdown({
+  itemId,
+  quantity,
+  items,
+  recipeMap,
+  recipes,
+  fallbackRecipeSearch,
+  depth = 0,
+  visited = new Set(),
+}: RecipeBreakdownProps) {
   // Prevent infinite recursion/circular dependencies
   if (visited.has(itemId) || depth > 10) return null;
   const newVisited = new Set(visited);
   newVisited.add(itemId);
 
-  let recipe = recipeMap?.get(String(itemId)); // Always use string key
+  const craftingRecipe = recipeMap?.get(itemId);
+  let conversionRecipie: ItemConversionRecipe | undefined;
+  // Always use string key
   let usedFallback = false;
-  if (!recipe && fallbackRecipeSearch) {
-    recipe = fallbackRecipeSearch(recipes, itemId);
-    usedFallback = !!recipe;
+  if (!craftingRecipe && fallbackRecipeSearch) {
+    conversionRecipie = fallbackRecipeSearch(recipes, itemId);
+    usedFallback = !!conversionRecipie;
   }
 
   // If no recipe, just show the item and quantity needed (no error/warning)
-  if (!recipe) {
+  if (!craftingRecipe && !conversionRecipie) {
     return (
       <div style={{ marginLeft: depth * 16 }}>
         {quantity} × {getItemName(items, itemId)}
       </div>
     );
   }
-  const inputs = getRecipeInputs(recipe);
+  const inputs = craftingRecipe
+    ? getRecipeInputs(craftingRecipe)
+    : conversionRecipie
+    ? getRecipeInputs(conversionRecipie)
+    : undefined;
   return (
     <Collapsible
-      label={<><strong>To craft {quantity} × {getItemName(items, itemId)}</strong>{usedFallback && <span style={{ color: 'orange' }}> (Fallback recipe used)</span>}</>}
+      label={
+        <>
+          <strong>
+            To craft {quantity} × {getItemName(items, itemId)}
+          </strong>
+          {usedFallback && (
+            <span style={{ color: "orange" }}> (Fallback recipe used)</span>
+          )}
+        </>
+      }
       defaultOpen={depth === 0}
       depth={depth}
     >
       <ul style={{ margin: 0, paddingLeft: 20 }}>
-        {inputs.map((input, idx) => {
+        {inputs?.map((input, idx) => {
           // Try to get input id and count
-          const inputId = input.id || input.item_id || input.input_item_id;
-          const inputQty = (input.count || input.quantity || input.amount || 1) * quantity;
+          let inputId: number | undefined;
+          let inputQty: number | undefined;
+          if (Array.isArray(input)) {
+            [inputId, inputQty] = input;
+          } else {
+            ({ id: inputId, count: inputQty } = input);
+          }
           return (
-            <li key={inputId || idx} style={{ listStyle: 'none', margin: 0 }}>
+            <li key={inputId || idx} style={{ listStyle: "none", margin: 0 }}>
               <RecipeBreakdown
                 itemId={inputId}
                 quantity={inputQty}
@@ -112,7 +146,11 @@ function RecipeBreakdown({ itemId, quantity, items, recipeMap, recipes, fallback
           );
         })}
       </ul>
-      {depth === 10 && <div style={{ color: 'orange' }}>Max recipe depth reached. Some requirements may not be shown.</div>}
+      {depth === 10 && (
+        <div style={{ color: "orange" }}>
+          Max recipe depth reached. Some requirements may not be shown.
+        </div>
+      )}
     </Collapsible>
   );
 }
@@ -122,74 +160,75 @@ export default function CraftingPlanner({
   recipes,
   plan,
   setPlan,
-  itemListDesc,
   recipeMap,
   fallbackRecipeSearch,
   inventory = [],
   setInventory,
   fileInputRef,
   handleDownload,
-  handleUpload
+  handleUpload,
 }: CraftingPlannerProps) {
-  const [selected, setSelected] = useState('');
+  const [selected, setSelected] = useState("");
   const [qty, setQty] = useState(1);
-  const [search, setSearch] = useState('');
-  const [tier, setTier] = useState('');
+  const [search, setSearch] = useState("");
+  const [tier, setTier] = useState("");
 
   // Preprocess recipes into a map for fast lookup, using itemListDesc for better mapping
   const recipeMapMemo = useMemo(() => recipeMap, [recipeMap]);
 
   // Filter items by search and tier
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
+    return items.filter((item) => {
       const matchesSearch =
         !search ||
         (item.name && item.name.toLowerCase().includes(search.toLowerCase())) ||
-        (item.displayName && item.displayName.toLowerCase().includes(search.toLowerCase())) ||
-        (String(item.id).includes(search));
+        String(item.id).includes(search);
       const matchesTier = !tier || String(item.tier) === String(tier);
       return matchesSearch && matchesTier;
     });
   }, [items, search, tier]);
 
-  const addToPlan = (itemId: string, quantity = 1) => {
+  const addToPlan = (itemId: number, quantity = 1) => {
     if (!itemId) return;
     setPlan((prev) => {
-      const idStr = String(itemId);
-      const exists = prev.find((p) => String(p.itemId) === idStr);
+      const exists = prev.find((p) => p.itemId === itemId);
       if (exists) {
         return prev.map((p) =>
-          String(p.itemId) === idStr ? { ...p, quantity: p.quantity + quantity } : p
+          p.itemId === itemId ? { ...p, quantity: p.quantity + quantity } : p
         );
       }
-      return [...prev, { itemId: idStr, quantity }];
+      return [...prev, { itemId: itemId, quantity }];
     });
   };
 
   // Helper to get 'have' from inventory for a given itemId
-  const getHaveFromInventory = (itemId: string) => {
-    const idStr = String(itemId);
-    const found = inventory.find((r) => String(r.itemId) === idStr);
+  const getHaveFromInventory = (itemId: number) => {
+    const found = inventory.find((r) => r.itemId === itemId);
     return found ? found.have : 0;
-  };
-
-  const updateHave = (itemId: string, have: number) => {
-    setPlan((prev) => prev.map((p) => (p.itemId === itemId ? { ...p, have } : p)));
   };
 
   return (
     <div className="card">
       <div className="text-center mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-bitcraft-primary">Crafting Planner</h2>
-        <p className="text-bitcraft-text-muted">Plan your crafting projects and track recipe requirements</p>
+        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-bitcraft-primary">
+          Crafting Planner
+        </h2>
+        <p className="text-bitcraft-text-muted">
+          Plan your crafting projects and track recipe requirements
+        </p>
       </div>
 
       <div className="form-section">
-        <h3 className="text-lg font-semibold mb-4 text-bitcraft-primary">➕ Add Items to Plan</h3>
+        <h3 className="text-lg font-semibold mb-4 text-bitcraft-primary">
+          ➕ Add Items to Plan
+        </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <div className="flex flex-col space-y-2">
-            <label htmlFor="planner-search-input" className="text-bitcraft-text font-medium text-sm">
+            <label
+              htmlFor="planner-search-input"
+              className="text-bitcraft-text font-medium text-sm"
+            >
               🔍 Search Items
             </label>
             <input
@@ -197,45 +236,53 @@ export default function CraftingPlanner({
               name="planner-search"
               type="text"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search items..."
               className="input-field"
             />
           </div>
 
           <div className="flex flex-col space-y-2">
-            <label htmlFor="planner-tier-select" className="text-bitcraft-text font-medium text-sm">
+            <label
+              htmlFor="planner-tier-select"
+              className="text-bitcraft-text font-medium text-sm"
+            >
               🎯 Filter by Tier
             </label>
             <select
               id="planner-tier-select"
               name="planner-tier"
               value={tier}
-              onChange={e => setTier(e.target.value)}
+              onChange={(e) => setTier(e.target.value)}
               className="input-field"
             >
               <option value="">All Tiers</option>
               {[...Array(10)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>Tier {i + 1}</option>
+                <option key={i + 1} value={i + 1}>
+                  Tier {i + 1}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="flex flex-col space-y-2">
-            <label htmlFor="planner-item-select" className="text-bitcraft-text font-medium text-sm">
+            <label
+              htmlFor="planner-item-select"
+              className="text-bitcraft-text font-medium text-sm"
+            >
               📦 Select Item
             </label>
             <select
               id="planner-item-select"
               name="planner-item"
               value={selected}
-              onChange={e => setSelected(e.target.value)}
+              onChange={(e) => setSelected(e.target.value)}
               className="input-field"
             >
               <option value="">Choose an item...</option>
               {filteredItems.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name || item.displayName || item.id}
+                  {item.name || item.id}
                 </option>
               ))}
             </select>
@@ -244,7 +291,10 @@ export default function CraftingPlanner({
 
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex flex-col space-y-2">
-            <label htmlFor="planner-qty-input" className="text-bitcraft-text font-medium text-sm">
+            <label
+              htmlFor="planner-qty-input"
+              className="text-bitcraft-text font-medium text-sm"
+            >
               📊 Quantity
             </label>
             <input
@@ -253,12 +303,12 @@ export default function CraftingPlanner({
               type="number"
               min="1"
               value={qty}
-              onChange={e => setQty(Number(e.target.value))}
+              onChange={(e) => setQty(Number(e.target.value))}
               className="input-field w-24"
             />
           </div>
           <button
-            onClick={() => addToPlan(selected, qty)}
+            onClick={() => addToPlan(Number(selected), qty)}
             className="btn-primary"
             disabled={!selected}
           >
@@ -275,7 +325,9 @@ export default function CraftingPlanner({
         {plan.length === 0 ? (
           <div className="text-center py-8 text-bitcraft-text-muted">
             <p className="text-lg">No items in your plan yet</p>
-            <p className="text-sm">Add items above to start planning your crafting project</p>
+            <p className="text-sm">
+              Add items above to start planning your crafting project
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -294,7 +346,10 @@ export default function CraftingPlanner({
 
                     <div className="flex flex-wrap items-center gap-3">
                       <div className="flex items-center gap-2">
-                        <label htmlFor={`need-input-${entry.itemId}`} className="text-bitcraft-text text-sm font-medium">
+                        <label
+                          htmlFor={`need-input-${entry.itemId}`}
+                          className="text-bitcraft-text text-sm font-medium"
+                        >
                           📦 Need:
                         </label>
                         <input
@@ -303,15 +358,30 @@ export default function CraftingPlanner({
                           type="number"
                           min="0"
                           value={entry.quantity}
-                          onChange={e => setPlan(prev => prev.map(p =>
-                            p.itemId === entry.itemId ? { ...p, quantity: Math.max(0, Number(e.target.value)) } : p
-                          ))}
+                          onChange={(e) =>
+                            setPlan((prev) =>
+                              prev.map((p) =>
+                                p.itemId === entry.itemId
+                                  ? {
+                                      ...p,
+                                      quantity: Math.max(
+                                        0,
+                                        Number(e.target.value)
+                                      ),
+                                    }
+                                  : p
+                              )
+                            )
+                          }
                           className="input-field w-20 text-center"
                         />
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <label htmlFor={`have-input-${entry.itemId}`} className="text-bitcraft-text text-sm font-medium">
+                        <label
+                          htmlFor={`have-input-${entry.itemId}`}
+                          className="text-bitcraft-text text-sm font-medium"
+                        >
                           ✅ Have:
                         </label>
                         <input
@@ -320,15 +390,23 @@ export default function CraftingPlanner({
                           type="number"
                           min="0"
                           value={have}
-                          onChange={e => {
+                          onChange={(e) => {
                             const newHave = Number(e.target.value);
-                            setInventory(prev => {
-                              const idStr = String(entry.itemId);
-                              const exists = prev.find((r) => String(r.itemId) === idStr);
+                            setInventory((prev) => {
+                              const exists = prev.find(
+                                (r) => r.itemId === entry.itemId
+                              );
                               if (exists) {
-                                return prev.map((r) => String(r.itemId) === idStr ? { ...r, have: newHave } : r);
+                                return prev.map((r) =>
+                                  r.itemId === entry.itemId
+                                    ? { ...r, have: newHave }
+                                    : r
+                                );
                               }
-                              return [...prev, { itemId: idStr, have: newHave }];
+                              return [
+                                ...prev,
+                                { itemId: entry.itemId, have: newHave },
+                              ];
                             });
                           }}
                           className="input-field w-20 text-center"
@@ -339,13 +417,23 @@ export default function CraftingPlanner({
                         <span className="text-bitcraft-text text-sm">
                           🎯 Still Need:
                         </span>
-                        <span className={`font-bold ${stillNeed > 0 ? 'text-bitcraft-primary' : 'text-green-400'}`}>
+                        <span
+                          className={`font-bold ${
+                            stillNeed > 0
+                              ? "text-bitcraft-primary"
+                              : "text-green-400"
+                          }`}
+                        >
                           {stillNeed}
                         </span>
                       </div>
 
                       <button
-                        onClick={() => setPlan(prev => prev.filter(p => p.itemId !== entry.itemId))}
+                        onClick={() =>
+                          setPlan((prev) =>
+                            prev.filter((p) => p.itemId !== entry.itemId)
+                          )
+                        }
                         className="text-red-400 hover:text-red-300 transition-colors p-1"
                         title="Remove from plan"
                       >
@@ -372,7 +460,9 @@ export default function CraftingPlanner({
       </div>
 
       <div className="form-section">
-        <h3 className="text-lg font-semibold mb-4 text-bitcraft-primary">💾 Save & Load</h3>
+        <h3 className="text-lg font-semibold mb-4 text-bitcraft-primary">
+          💾 Save & Load
+        </h3>
         <div className="flex flex-wrap gap-3">
           <button onClick={handleDownload} className="btn-primary">
             📥 Download Save
@@ -395,9 +485,13 @@ export default function CraftingPlanner({
           </label>
           <button
             onClick={() => {
-              if (window.confirm('Clear all saved planner and inventory data? This cannot be undone.')) {
-                localStorage.removeItem('bitcraft-plan');
-                localStorage.removeItem('bitcraft-inventory');
+              if (
+                window.confirm(
+                  "Clear all saved planner and inventory data? This cannot be undone."
+                )
+              ) {
+                localStorage.removeItem("bitcraft-plan");
+                localStorage.removeItem("bitcraft-inventory");
                 setPlan([]);
                 setInventory([]);
               }

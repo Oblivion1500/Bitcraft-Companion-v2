@@ -1,7 +1,7 @@
 // src/components/ResourceTracker.tsx
-import React, { useState, useMemo } from 'react';
-import type { ItemDesc } from '../types/bitcraft';
-import type { InventoryItem } from '../types/app';
+import React, { useState, useMemo } from "react";
+import type { ItemDesc } from "../types/bitcraft";
+import type { InventoryItem } from "../types/app";
 
 interface ResourceTrackerProps {
   items: ItemDesc[];
@@ -12,26 +12,29 @@ interface ResourceTrackerProps {
 /**
  * ResourceTracker component allows users to track their owned resources.
  */
-export default function ResourceTracker({ items, inventory, setInventory }: ResourceTrackerProps) {
-  const [selected, setSelected] = useState('');
+export default function ResourceTracker({
+  items,
+  inventory,
+  setInventory,
+}: ResourceTrackerProps) {
+  const [selected, setSelected] = useState("");
   const [qty, setQty] = useState(1);
-  const [search, setSearch] = useState('');
-  const [tier, setTier] = useState('');
+  const [search, setSearch] = useState("");
+  const [tier, setTier] = useState("");
 
   // Filter items by search and tier (like CraftingPlanner)
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
+    return items.filter((item) => {
       const matchesSearch =
         !search ||
         (item.name && item.name.toLowerCase().includes(search.toLowerCase())) ||
-        (item.displayName && item.displayName.toLowerCase().includes(search.toLowerCase())) ||
-        (String(item.id).includes(search));
+        String(item.id).includes(search);
       const matchesTier = !tier || String(item.tier) === String(tier);
       return matchesSearch && matchesTier;
     });
   }, [items, search, tier]);
 
-  const addResource = (itemId: string, quantity = 1) => {
+  const addResource = (itemId: number, quantity = 1) => {
     if (!itemId) return;
     setInventory((prev) => {
       const exists = prev.find((r) => r.itemId === itemId);
@@ -44,29 +47,39 @@ export default function ResourceTracker({ items, inventory, setInventory }: Reso
     });
   };
 
-  const updateHave = (itemId: string, have: number) => {
-    setInventory((prev) => prev.map((r) => (r.itemId === itemId ? { ...r, have } : r)));
+  const updateHave = (itemId: number, have: number) => {
+    setInventory((prev) =>
+      prev.map((r) => (r.itemId === itemId ? { ...r, have } : r))
+    );
   };
 
-  const getItemName = (id: string | number) => {
-    const idStr = String(id);
-    const item = items.find((i) => String(i.id) === idStr);
-    return item ? item.name || item.displayName || idStr : idStr;
+  const getItemName = (id: number) => {
+    const item = items.find((i) => i.id === id);
+    return item?.name || String(id);
   };
 
   return (
     <div className="card">
       <div className="text-center mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-bitcraft-primary">Inventory Tracker</h2>
-        <p className="text-bitcraft-text-muted">Track your resources and materials</p>
+        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-bitcraft-primary">
+          Inventory Tracker
+        </h2>
+        <p className="text-bitcraft-text-muted">
+          Track your resources and materials
+        </p>
       </div>
 
       <div className="form-section">
-        <h3 className="text-lg font-semibold mb-4 text-bitcraft-primary">➕ Add Resources</h3>
+        <h3 className="text-lg font-semibold mb-4 text-bitcraft-primary">
+          ➕ Add Resources
+        </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <div className="flex flex-col space-y-2">
-            <label htmlFor="inventory-search-input" className="text-bitcraft-text font-medium text-sm">
+            <label
+              htmlFor="inventory-search-input"
+              className="text-bitcraft-text font-medium text-sm"
+            >
               🔍 Search Resources
             </label>
             <input
@@ -74,45 +87,53 @@ export default function ResourceTracker({ items, inventory, setInventory }: Reso
               name="inventory-search"
               type="text"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search resources..."
               className="input-field"
             />
           </div>
 
           <div className="flex flex-col space-y-2">
-            <label htmlFor="inventory-tier-select" className="text-bitcraft-text font-medium text-sm">
+            <label
+              htmlFor="inventory-tier-select"
+              className="text-bitcraft-text font-medium text-sm"
+            >
               🎯 Filter by Tier
             </label>
             <select
               id="inventory-tier-select"
               name="inventory-tier"
               value={tier}
-              onChange={e => setTier(e.target.value)}
+              onChange={(e) => setTier(e.target.value)}
               className="input-field"
             >
               <option value="">All Tiers</option>
               {[...Array(10)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>Tier {i + 1}</option>
+                <option key={i + 1} value={i + 1}>
+                  Tier {i + 1}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="flex flex-col space-y-2">
-            <label htmlFor="resource-select" className="text-bitcraft-text font-medium text-sm">
+            <label
+              htmlFor="resource-select"
+              className="text-bitcraft-text font-medium text-sm"
+            >
               📦 Select Resource
             </label>
             <select
               id="resource-select"
               name="resource-select"
               value={selected}
-              onChange={e => setSelected(e.target.value)}
+              onChange={(e) => setSelected(e.target.value)}
               className="input-field"
             >
               <option value="">Choose a resource...</option>
               {filteredItems.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name || item.displayName || item.id}
+                  {item.name || item.id}
                 </option>
               ))}
             </select>
@@ -121,7 +142,10 @@ export default function ResourceTracker({ items, inventory, setInventory }: Reso
 
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex flex-col space-y-2">
-            <label htmlFor="resource-qty-input" className="text-bitcraft-text font-medium text-sm">
+            <label
+              htmlFor="resource-qty-input"
+              className="text-bitcraft-text font-medium text-sm"
+            >
               📊 Quantity
             </label>
             <input
@@ -130,12 +154,12 @@ export default function ResourceTracker({ items, inventory, setInventory }: Reso
               type="number"
               min="1"
               value={qty}
-              onChange={e => setQty(Number(e.target.value))}
+              onChange={(e) => setQty(Number(e.target.value))}
               className="input-field w-24"
             />
           </div>
           <button
-            onClick={() => addResource(selected, qty)}
+            onClick={() => addResource(Number(selected), qty)}
             className="btn-primary"
             disabled={!selected}
           >
@@ -152,7 +176,9 @@ export default function ResourceTracker({ items, inventory, setInventory }: Reso
         {inventory.length === 0 ? (
           <div className="text-center py-8 text-bitcraft-text-muted">
             <p className="text-lg">No resources tracked yet</p>
-            <p className="text-sm">Add resources above to start tracking your inventory</p>
+            <p className="text-sm">
+              Add resources above to start tracking your inventory
+            </p>
           </div>
         ) : (
           <div className="grid gap-3">
@@ -167,7 +193,10 @@ export default function ResourceTracker({ items, inventory, setInventory }: Reso
 
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
-                      <label htmlFor={`resource-have-input-${entry.itemId}`} className="text-bitcraft-text text-sm font-medium">
+                      <label
+                        htmlFor={`resource-have-input-${entry.itemId}`}
+                        className="text-bitcraft-text text-sm font-medium"
+                      >
                         📦 Quantity:
                       </label>
                       <input
@@ -176,13 +205,19 @@ export default function ResourceTracker({ items, inventory, setInventory }: Reso
                         type="number"
                         min="0"
                         value={entry.have}
-                        onChange={e => updateHave(entry.itemId, Number(e.target.value))}
+                        onChange={(e) =>
+                          updateHave(entry.itemId, Number(e.target.value))
+                        }
                         className="input-field w-20 text-center"
                       />
                     </div>
 
                     <button
-                      onClick={() => setInventory(prev => prev.filter(r => r.itemId !== entry.itemId))}
+                      onClick={() =>
+                        setInventory((prev) =>
+                          prev.filter((r) => r.itemId !== entry.itemId)
+                        )
+                      }
                       className="text-red-400 hover:text-red-300 transition-colors p-1"
                       title="Remove from inventory"
                     >
